@@ -1,0 +1,4 @@
+Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,extends,text,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap
+,PIN side,PIN number,PIN name,pin EL Type,PIN gr type,pin stacked,pin hidden,name font size,number font size,,,,,,,,,,,
+SYM1,,,,,,,,1,,,,,,,,,,,,
+SYMZ,,,,,,,,Z-B,,,,,,,,,,,,

@@ -1,0 +1,12 @@
+Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,extends,text,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap,text gap
+,PIN side,PIN number,PIN name,pin EL Type,PIN gr type,pin length,pin stacked,pin hidden,name font size,number font size,,,,,,,,,,,
+#4 gap 4 pin 1,alternative,,,,,,,,,,,,,,,,,,,,
+SYM8,,,,,,,,Y8,,,,,,,,,,,,,
+,left,"1, 2, 3, 4",~{IN$},input,inverted,,,,,,,,,,,,,,,,
+,,---,,,,,,,,,,,,,,,,,,,
+,,"5,6,7,8",~{IN$(4)},,,,,,,,,,,,,,,,,,
+,right,9,OUT1,output,line,,,,,,,,,,,,,,,,
+,,9,BUS1,tri_state,inverted,,,,,,,,,,,,,,,,
+,,9,OC1,open_collector,inverted,,,,,,,,,,,,,,,,
+SYMZ,,,,,,,,Z,,,,,,0,0,0.25,0.25,20,0.5,0.5,
+,left,1,nam,input,,0.75,false,false,20,20,,,,,,,,,,,

@@ -1,0 +1,24 @@
+# ---- some symbol attribute samples for pin name/number hide and name offset
+# show pin numbers, show pin names, names in, name offset = 20
+# all default - no attributes generated
+#
+# show pin numbers, show pin names, names in, name offset = 50
+# (pin_names (offset 1.27))
+#
+# show pin numbers, show pin names, names in, name offset = 0
+# (pin_names (offset 0.002))
+#
+# show pin numbers, show pin names, names out
+# (pin_names (offset 0))
+#
+# show pin numbers, hide pin names, names out
+# (pin_names (offset 0) hide)
+#
+# hide pin numbers, hide pin names, names out
+# (pin_numbers hide)
+# (pin_names (offset 0) hide)
+#
+# hide pin numbers, hide pin names, names in, name offset = 20
+# (pin_numbers hide)
+# (pin_names hide)
+

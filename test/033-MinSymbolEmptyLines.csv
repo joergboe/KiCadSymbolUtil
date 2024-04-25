@@ -1,0 +1,7 @@
+Symbol Name,,,Footprint,Description,Datasheet,Keywords
+,PIN side,PIN number,PIN name,pin EL Type,PIN gr type,
+,,,,,,
+SYM1,,,,,,
+#comment line 1,,,,,,
+SYM2,,,,,,
+,# comment 2,3 empty ,lines skipped,,,

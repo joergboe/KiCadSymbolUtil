@@ -1,0 +1,17 @@
+Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,extends,text,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap,text gap
+,PIN side,PIN number,PIN name,pin EL Type,PIN gr type,pin length,pin stacked,pin hidden,name font size,number font size,,,,,,,,,,,
+#4 gap 4 pin 5,hidden,stacked,,,,,,,,,,,,,,,,,,,
+SYM9,,,,,,,,Y9,,,,,,,,,,,,,2.0
+,left,"1, 2, 3, 4",~{IN$(0+2)},input,inverted,,,,,,,,,,,,,,,,
+,,"1, 2, 3, 4",IN$(0+2),input,line,,,,,,,,,,,,,,,,
+,,--- 1,,,,,,,,,,,,,,,,,,,
+,,"5,6,7,8",~{IN$(1+2)},input,inverted,,,,,,,,,,,,,,,,
+,,"5,6,7,8",IN$(1+2),input,line,,,,,,,,,,,,,,,,
+,right,10,vcc,power_in,line,,,yes,,,,,,,,,,,,,
+,,9,,,,,,,,,,,,,,,,,,,
+,,11,gnd,power_in,line,,,yes,,,,,,,,,,,,,
+,top,12,vdd,power_in,line,,,,,,,,,,,,,,,,
+,bottom,13,gg,power_in,line,,,,,,,,,,,,,,,,
+,,14,gg,,,,yes,,,,,,,,,,,,,,
+SYMZ,,,,,,,,Z,,,,,,0,0,0.25,0.25,20,0.5,0.5,
+,left,1,nam,input,,0.75,false,false,20,20,,,,,,,,,,,
