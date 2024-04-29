@@ -2,7 +2,7 @@
 """Generate a kicat symbol library from lib.csv files."""
 
 __author__ = "joergboe"
-__version__ = "0.0.1"
+__version__ = "1.0.0"
 
 from io import TextIOWrapper
 import sys
@@ -12,7 +12,7 @@ import re
 from enum import Enum
 from collections import namedtuple
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, Union, Dict, Any
+from typing import Optional, Tuple, Union, TypeAlias
 
 import kicad_sym as kicad
 
@@ -77,23 +77,25 @@ class SymHead:
     TEXT_GAP = 'text gap'
     H_REF_VALUE_GAP = 'h r/v gap'
     W_REF_VALUE_PIN_GAP = 'w r/v gap'
+    DERIVE_FROM = 'derive from'
 
     # internally used
     VALUE = 'symbol value'
 
-    # this is a list because the order matters during symbol generation
+    # this is a list because the order matters during symbol parsing
     COLUMNS_NEED = [
-    ColumnProp(NAME, Need.VAL),            ColumnProp(EXTENDS, Need.OPT),
-    ColumnProp(FOOTPRINT, Need.MAN),       ColumnProp(DATASHEET, Need.MAN),
-    ColumnProp(DESCRIPTION, Need.MAN),     ColumnProp(KEYWORDS, Need.MAN),
-    ColumnProp(FP_FILTERS, Need.OPT),      ColumnProp(REFERENCE, Need.OPT),
-    ColumnProp(TEXT, Need.OPT),            ColumnProp(IN_BOM, Need.OPT),
-    ColumnProp(ON_BOARD, Need.OPT),        ColumnProp(PIN_NUMBERS_HIDE, Need.OPT),
-    ColumnProp(PIN_NAME_OFFSET, Need.OPT), ColumnProp(PIN_NAMES_HIDE, Need.OPT),
-    ColumnProp(MIN_W, Need.OPT),           ColumnProp(MIN_H, Need.OPT),
-    ColumnProp(W_PADDING, Need.OPT),       ColumnProp(H_PADDING, Need.OPT),
-    ColumnProp(TEXT_FONT_SIZE, Need.OPT),  ColumnProp(TEXT_GAP, Need.OPT),
-    ColumnProp(H_REF_VALUE_GAP, Need.OPT), ColumnProp(W_REF_VALUE_PIN_GAP, Need.OPT)]
+        ColumnProp(NAME, Need.VAL),
+        ColumnProp(DERIVE_FROM, Need.OPT),     ColumnProp(EXTENDS, Need.OPT),
+        ColumnProp(FOOTPRINT, Need.MAN),       ColumnProp(DATASHEET, Need.MAN),
+        ColumnProp(DESCRIPTION, Need.MAN),     ColumnProp(KEYWORDS, Need.MAN),
+        ColumnProp(FP_FILTERS, Need.OPT),      ColumnProp(REFERENCE, Need.OPT),
+        ColumnProp(TEXT, Need.OPT),            ColumnProp(IN_BOM, Need.OPT),
+        ColumnProp(ON_BOARD, Need.OPT),        ColumnProp(PIN_NUMBERS_HIDE, Need.OPT),
+        ColumnProp(PIN_NAME_OFFSET, Need.OPT), ColumnProp(PIN_NAMES_HIDE, Need.OPT),
+        ColumnProp(MIN_W, Need.OPT),           ColumnProp(MIN_H, Need.OPT),
+        ColumnProp(W_PADDING, Need.OPT),       ColumnProp(H_PADDING, Need.OPT),
+        ColumnProp(TEXT_FONT_SIZE, Need.OPT),  ColumnProp(TEXT_GAP, Need.OPT),
+        ColumnProp(H_REF_VALUE_GAP, Need.OPT), ColumnProp(W_REF_VALUE_PIN_GAP, Need.OPT)]
 
     BOOL_FIELDS = {IN_BOM, ON_BOARD, PIN_NUMBERS_HIDE, PIN_NAMES_HIDE}
     FLOAT_FIELDS = {W_PADDING, H_PADDING, TEXT_GAP, H_REF_VALUE_GAP, W_REF_VALUE_PIN_GAP}
@@ -142,7 +144,11 @@ class SymHead:
         H_REF_VALUE_GAP: 'Vertical distance from symbol body to Reference and Value '
         'in pin grid units.',
         W_REF_VALUE_PIN_GAP: 'Horizontal distance from pin to Reference and Value '
-        'in pin grid units.'
+        'in pin grid units.',
+        EXTENDS: 'The KiCad attribute for an extension symbol.',
+        DERIVE_FROM: 'Build a new symbol and derive attributes and pins from symbol. '
+        'Given symbol attributes overwrite the original values. Pins can be deleted '
+        'or inserted. New pins can be inserted or appended.'
     }
 
     @classmethod
@@ -204,7 +210,7 @@ class PinHead:
         vpr(f'get_gap_count({value}) returns: {res}', level=Verbosity.VERY_VERB)
         return res
 
-    SIDE = 'pin side'
+    CAT = 'pin category'
     NAME = 'pin name'
     NUMBER = 'pin number'
     GR_TYPE = 'pin gr type'
@@ -215,15 +221,16 @@ class PinHead:
     NAME_FONT_SIZE = 'name font size'
     NUMBER_FONT_SIZE = 'number font size'
 
+    # this is a list because the order matters during pin parsing
     COLUMNS_NEED = [
-    ColumnProp(SIDE, Need.VAL),
-    ColumnProp(NUMBER, Need.VAL), ColumnProp(NAME, Need.MAN),
-    ColumnProp(GR_TYPE, Need.MAN), ColumnProp(EL_TYPE, Need.VAL),
-    ColumnProp(STACKED, Need.OPT), ColumnProp(HIDDEN, Need.OPT),
-    ColumnProp(LEN, Need.OPT), ColumnProp(NAME_FONT_SIZE, Need.OPT),
-    ColumnProp(NUMBER_FONT_SIZE, Need.OPT)]
+        ColumnProp(CAT, Need.VAL),     ColumnProp(NUMBER, Need.VAL),
+        ColumnProp(NAME, Need.MAN),    ColumnProp(GR_TYPE, Need.MAN),
+        ColumnProp(EL_TYPE, Need.VAL), ColumnProp(STACKED, Need.OPT),
+        ColumnProp(HIDDEN, Need.OPT),  ColumnProp(LEN, Need.OPT),
+        ColumnProp(NAME_FONT_SIZE, Need.OPT),
+        ColumnProp(NUMBER_FONT_SIZE, Need.OPT)]
 
-    STICKY_FIELDS = frozenset({SIDE, GR_TYPE, EL_TYPE, LEN, NAME_FONT_SIZE,
+    STICKY_FIELDS = frozenset({CAT, GR_TYPE, EL_TYPE, LEN, NAME_FONT_SIZE,
                                NUMBER_FONT_SIZE})
 
     BOOL_FIELDS = {STACKED, HIDDEN}
@@ -239,9 +246,11 @@ class PinHead:
 
     SIDE_TO_ANGLE = {'left': 0, 'right': 180, 'bottom': 90, 'top': 270}
 
-    GAP = '---'        # special name for single gap in the pin row
+    GAP = '---'        # special number for single gap in the pin row
 
-    VALID_DATA = {SIDE: SIDE_TO_ANGLE.keys(),
+    CATS_FOR_DERIVED = {'delete', 'before', 'after'}
+
+    VALID_DATA = {CAT: CATS_FOR_DERIVED | set(SIDE_TO_ANGLE.keys()),
                   GR_TYPE: {'line',            # ----
                             'inverted',        # ----o
                             'clock',           # ----|>
@@ -264,6 +273,13 @@ class PinHead:
                             'power_in',
                             'power_out'} }
     INFO = {
+        CAT: 'The category of a pin. For base symbols, the "Category" refers to the side \n'
+        'on which the pin is located: "left", "right", "top" and "bottom"\n'
+        'For derived symbols, the categories "delete", "before" and "after" are allowed\n'
+        'and denote pseudo-pins.\n'
+        'The "delete" category removes an inherited pin number from the symbol.\n'
+        'The categories "before" and "after" put the insertion marker in place of\n'
+        'the pin number. Subsequent "real" pins are inserted at this insertion mark.',
         LEN: 'The length of the pin in pin grid units. Fractions (0.5, 0.25) are possible.\n'
         'The pin length should be from 1.0 (100mil) 3.0 (300mil) in steps of 1/2 grid\n'
         'padding + pin len must be an integer.',
@@ -300,7 +316,7 @@ class PinHead:
                 res += cls.INFO[item.name]
                 res += '\n'
             res += "\n"
-        res += f'''If the pin name or the pin number has a value {cls.GAP!r}
+        res += f'''If the pin number has a value {cls.GAP!r}
             or "{cls.GAP} n" no pin is generated at n positions. You can
             use gaps to group pins into sections.
             Sticky fields are copied from the previous line within a symbol.
@@ -351,10 +367,6 @@ class PinError(CsvToKicadError):
 
 class ValidationError(CsvToKicadError):
     """Thrown if a field value is not valid."""
-    pass
-
-class SymbolBuildError(CsvToKicadError):
-    """Thrown in case of an error during symbol building process."""
     pass
 
 class LogicError(CsvToKicadError):
@@ -411,20 +423,20 @@ class MyCSVReader:
                 raise LogicError(f'Wrong type in get_nonempty_line(): {line!r}',loc)
             self.skipped_empty += 1
 
-
+Attrib : TypeAlias = Union[str,int,float,bool]
 @dataclass
 class Pin:
     """Internal representation of a pin."""
     loc: Location
-    attribs: Dict[str,Union[str,int,float,bool]] = field(default_factory=dict)
+    attribs: dict[str,Attrib] = field(default_factory=dict)
 
     def __post_init__(self):
         vpr("Pin created:", self.__dict__, level=Verbosity.VERY_VERB)
 
-    def add_attr(self, name:str, value:str) -> None:
+    def add_attr(self, name:str, value:Attrib) -> None:
         self.attribs[name] = value
     
-    def get_attr(self, name: str) -> any:
+    def get_attr(self, name: str) -> Attrib:
         if not name in self.attribs:
             raise LogicError(f'No attribute {name!r}', self.loc)
         return self.attribs[name]
@@ -451,10 +463,16 @@ class Pin:
     def is_stacked(self) -> bool:
         return PinHead.STACKED in self.attribs and self.attribs[PinHead.STACKED]
     
-    def get_side(self) -> str:
-        if not PinHead.SIDE in self.attribs:
-            raise LogicError(f'No attribute {PinHead.SIDE!r}', self.loc)
-        return self.attribs[PinHead.SIDE]
+    def is_pseudo_pin(self) -> bool:
+        if PinHead.CAT in self.attribs:
+            return self.attribs[PinHead.CAT] in PinHead.CATS_FOR_DERIVED
+        else:
+            return False
+
+    def get_cat(self) -> str:
+        if not PinHead.CAT in self.attribs:
+            raise LogicError(f'No attribute {PinHead.CAT!r}', self.loc)
+        return self.attribs[PinHead.CAT]
 
     def get_number(self) -> str:
         if not PinHead.NUMBER in self.attribs:
@@ -467,7 +485,7 @@ class Pin:
         return self.attribs[PinHead.NAME]
 
 
-def get_bool_field(val:str, column_name:str, loc:Location) -> bool:
+def convert_to_bool(val:str, column_name:str, loc:Location) -> bool:
     """Get the boolean value from a yes/no field entry and return"""
     if val:
         temp = val
@@ -484,11 +502,11 @@ def get_bool_field(val:str, column_name:str, loc:Location) -> bool:
     
 
 def convert_inp(value:str, name:str, bool_fields:set[str], int_fields:set[str],
-                float_fields:set[str], loc:Location) -> Any:
+                float_fields:set[str], loc:Location) -> Attrib:
     res = None
     try:
         if name in bool_fields:
-            res = get_bool_field(value, name, loc)
+            res = convert_to_bool(value, name, loc)
         elif name in int_fields:
             res = int(value)
         elif name in float_fields:
@@ -524,6 +542,7 @@ def validate_value(value:str, valid_values:set[str], column_name:str,
 
 
 def clone_bus_pin(pin:Pin, number:str, rex:str, serial:int) -> Pin:
+    """Clone bus pin to a physical pin number and convert bus pin name"""
     bus_pin = Pin(pin.loc)
     for pin_attr_name in pin.attribs.keys():
         if pin_attr_name == PinHead.NUMBER:
@@ -564,14 +583,14 @@ class PinProcessor:
         previous_pin -- previous pin or None
         Globals:
         PinHead      -- class attributes
-        vpr       -- the log printer 
+        vpr          -- the log printer 
         Returns: validated pin as as dictionary.
         Throws: LogicError, PinError
 
         Pin is a dictionary like:
-        {'Side':'aSide', 'number':'aNumber', 'name', 'aName', 'stacked':True}
+        {'pin category':'aSide', 'pin number':'aNumber', 'pin name', 'aName', 'stacked':True}
         Alternative pin functions follow as entry in pin list with same 'number'
-        If name or number is '----' or '___', it is a separator or a gap.
+        If name or number is '---' or '--- n', it is or a gap or n gaps.
         A separator/gap takes the space of one pin but does not generate a pin-symbol
         """
         vpr(f'parse_pin inp: {inp.columns}', level=Verbosity.VERBOSE)
@@ -591,7 +610,10 @@ class PinProcessor:
             i += 1
         # build pin object and check values
         pin = Pin(inp.location)
+        # expected order: category, number, name, ...
+        break_condition = ''
         for item in PinHead.COLUMNS_NEED:
+            check_fields = break_condition == ''
             # get column and value
             column = None
             value = ''
@@ -601,34 +623,42 @@ class PinProcessor:
             vpr(f'parse_pin: item: {item!r} column: {column} value: {value!r}',
                 level=Verbosity.VERY_VERB)
             # check separator or gap
-            if (item.name == PinHead.NAME) or (item.name == PinHead.NUMBER):
-                if PinHead.is_gap(value):
+            if (item.name == PinHead.NUMBER) and PinHead.is_gap(value):
                     pin.set_gap(value)
-                    break
-            # propagate sticky fields if necessary and possible
-            if (not value) and (item.name in PinHead.STICKY_FIELDS):
-                if previous_pin and previous_pin.has_attr(item.name):
-                    v_str = str(previous_pin.get_attr(item.name))
-                    if v_str:
-                        value = v_str
-            # check need
-            if not value:
-                if item.need == Need.VAL:
-                    raise PinError(f'Value is required for {item.name!r}', inp.location)
-            # add defaults
-            if not value and (item.name in PinHead.DEFAULTS):
-                value = PinHead.DEFAULTS[item.name]
-            # check valid entries
-            if item.name in PinHead.VALID_DATA:
-                validate_value(value, PinHead.VALID_DATA[item.name], item.name,
-                               inp.location)
-            # add name:value to pin
-            if value or (item.need != Need.OPT):
-                # Need.MAN and Need.VAL are always put
-                va = convert_inp(value, item.name, PinHead.BOOL_FIELDS,
-                                    PinHead.INT_FIELDS, PinHead.FLOAT_FIELDS,
-                                    inp.location)
-                pin.add_attr(item.name, va)
+                    break_condition = 'pin gap'
+            # check pseudo pin
+            if (item.name == PinHead.NAME):
+                if pin.is_pseudo_pin():
+                    break_condition = 'pseudo pin'
+            if check_fields:
+                # propagate sticky fields if necessary and possible
+                if (not value) and (item.name in PinHead.STICKY_FIELDS):
+                    if previous_pin and previous_pin.has_attr(item.name):
+                        v_str = str(previous_pin.get_attr(item.name))
+                        if v_str:
+                            value = v_str
+                # check need
+                if not value:
+                    if item.need == Need.VAL:
+                        raise PinError(f'Value is required for {item.name!r}', inp.location)
+                # add defaults
+                if not value and (item.name in PinHead.DEFAULTS):
+                    value = PinHead.DEFAULTS[item.name]
+                # check valid entries
+                if item.name in PinHead.VALID_DATA:
+                    validate_value(value, PinHead.VALID_DATA[item.name], item.name,
+                                inp.location)
+                # add name:value to pin
+                if value or (item.need != Need.OPT):
+                    # Need.MAN and Need.VAL are always put
+                    va = convert_inp(value, item.name, PinHead.BOOL_FIELDS,
+                                        PinHead.INT_FIELDS, PinHead.FLOAT_FIELDS,
+                                        inp.location)
+                    pin.add_attr(item.name, va)
+            else:
+                if value:
+                    print(f'WARNING: Ignored value: {value!r} in {break_condition} column: {item.name!r}',
+                          inp.location, file=sys.stderr)
         vpr(f'parse_pin returns: {pin}', level=Verbosity.VERBOSE)
         return pin
 
@@ -675,37 +705,53 @@ def get_bus_build_schema(name:str, loc:Location) -> BusBuildSchema:
 PinShapeProps = namedtuple('PinShapeProps',
 'width_h height_h pin_count_l pin_count_r pin_count_t pin_count_b')
 
-def init_pin_list() -> dict[str:list]:
-    return {side:[] for side in PinHead.SIDE_TO_ANGLE.keys()}
-
 @dataclass
 class Symbol:
     """Internal representation of a symbol.
     
     All symbol attributes are stored in the 'attribs'.
     The name is additionally stored in 'name'.
-    The symbol pins are sorted into 4 lists in pins['left'], pins['right']...
+    The symbol pins are stored in a list of pins.
     """
     loc: Location
-    attribs: dict = field(default_factory=dict)
-    pins: dict[str:list[Pin]] = field(default_factory=init_pin_list)
-    name: str = field(default_factory=str)
+    attribs: dict[str,Attrib] = field(default_factory=dict)
+    pins: list[Pin] = field(default_factory=list)
 
     def __post_init__(self):
         vpr("Symbol created:", self.__dict__, level=Verbosity.VERY_VERB)
 
-    def add_attr(self, name:str, value:str) -> None:
+    def add_attr(self, name:str, value:Attrib) -> None:
         if name == SymHead.NAME:
+            # KiCad requires: symbol name and value are always equal
             self.attribs[SymHead.VALUE] = value
-            self.name = value
         self.attribs[name] = value
-    
+
+    def get_attr(self, name:str) -> Optional[Attrib]:
+        if name in self.attribs:
+            return self.attribs[name]
+        else:
+            return None
+
+    def get_name(self) -> str:
+        if not SymHead.NAME in self.attribs:
+            raise LogicError(f'get_name() called but no name in self.attribs', self.loc)
+        return self.attribs[SymHead.NAME]
+
     def add_pin(self, pin:Pin) -> None:
-        side = pin.get_side()
-        self.pins[side].append(pin)
+        self.pins.append(pin)
     
-    def is_derived(self) -> bool:
+    def is_extension(self) -> bool:
         return SymHead.EXTENDS in self.attribs and self.attribs[SymHead.EXTENDS]
+
+    def is_derived(self) -> bool:
+        return (SymHead.DERIVE_FROM in self.attribs) \
+            and (self.attribs[SymHead.DERIVE_FROM] != '')
+
+    def set_derived(self, value:str) -> None:
+        self.attribs[SymHead.DERIVE_FROM] = value
+
+    def get_derived(self) -> str:
+        return self.attribs[SymHead.DERIVE_FROM]
 
     def get_effective_pin_count(self, side:str) -> int:
         """Get the count of the effective pin count in list pins
@@ -715,19 +761,20 @@ class Symbol:
         Separators and gaps are counted."""
         count = 0
         previous_pin_number = ""
-        for pin in self.pins[side]:
-            pin_number = pin.get_number()
-            pin_stacked = pin.is_stacked()
-            if pin_stacked and (previous_pin_number == pin_number):
-                raise SymbolBuildError(f'get_effective_pin_count(): stacked and '
-                                       f'alternate not allowed in : {pin}', pin.loc)
-            if pin_stacked:
-                pass
-            elif pin.is_gap():
-                count += pin.get_gap_count()
-            elif (previous_pin_number != pin_number):
-                count += len(pin_number.split(','))
-            previous_pin_number = pin_number
+        for pin in self.pins:
+            if pin.get_cat() == side:
+                pin_number = pin.get_number()
+                pin_stacked = pin.is_stacked()
+                if pin_stacked and (previous_pin_number == pin_number):
+                    raise SymbolError(f'get_effective_pin_count(): stacked and '
+                                      f'alternate not allowed in : {pin}', pin.loc)
+                if pin_stacked:
+                    pass
+                elif pin.is_gap():
+                    count += pin.get_gap_count()
+                elif (previous_pin_number != pin_number):
+                    count += len(pin_number.split(','))
+                previous_pin_number = pin_number
         vpr(side, 'get_effective_pin_count returns', count, level=Verbosity.VERBOSE)
         return count
 
@@ -748,11 +795,11 @@ class Symbol:
         m_h_h = self.attribs[SymHead.MIN_H] // 2
         if width_half < m_w_h:
             vpr(f'Pin Shape Width: {width_half} is below minimum. Set: {m_w_h} '
-                f'Symbol name: {self.name} {self.loc}', level=Verbosity.VERBOSE)
+                f'Symbol name: {self.get_name()} {self.loc}', level=Verbosity.VERBOSE)
             width_half = m_w_h
         if height_half < m_h_h:
             vpr(f'Pin Shape Height: {height_half} is below minimum. Set: {m_h_h} '
-                f'Symbol name: {self.name} {self.loc}', level=Verbosity.VERBOSE)
+                f'Symbol name: {self.get_name()} {self.loc}', level=Verbosity.VERBOSE)
             height_half = m_h_h
         psp = PinShapeProps(width_half, height_half, pin_count_l, pin_count_r,
                         pin_count_t, pin_count_b)
@@ -766,7 +813,7 @@ class Symbol:
         """Build and return the Kicad new_symbol"""
         # real width is 2 * w, real heigth is 2 * h
         psp = self.get_pin_shape()
-        new_symbol = kicad.KicadSymbol(self.name, libname, filename)
+        new_symbol = kicad.KicadSymbol(self.get_name(), libname, filename)
         # add text properties
         for p in SymHead.MAN_PROPS:
             prop = kicad.Property(SymHead.KICAD_PROPERTY_NAMES[p], self.attribs[p],
@@ -812,7 +859,7 @@ class Symbol:
         prop.posy = pyval
         prop.rotation = 0.0
 
-        if self.is_derived():
+        if self.is_extension():
             new_symbol.extends = self.attribs[SymHead.EXTENDS]
             return new_symbol
         # place the body rectangle
@@ -849,7 +896,7 @@ class Symbol:
         Goes through all 4 sides left, right, top and bottom
         """
 
-        def collect_alt_functions(side_pin_list:list[dict], shift_pos) -> None:
+        def collect_alt_functions(side_pin_list:list[Pin], shift_pos) -> None:
             """Collect all associated alternative functions of one pin in alt_func_list
             
             Goes through side_pin_list, collects the alternative functions of a pin
@@ -883,9 +930,9 @@ class Symbol:
                     pin_pos = padding + p_len
                     pin_pos_i = int(pin_pos)
                     if pin_pos != pin_pos_i:
-                        raise SymbolBuildError(f'Invalid pin_len: {p_len} padding: '
-                                               f'{padding} combination in pin: '
-                            f'{alt_func_list_single[0].get_number()} Symbol {self.name}',
+                        raise SymbolError(f'Invalid pin_len: {p_len} padding: '
+                            f'{padding} combination in pin: '
+                            f'{alt_func_list_single[0].get_number()} Symbol {self.get_name()}',
                             alt_func_list_single[0].loc)
                     # shift pos
                     nonlocal do_shift
@@ -950,14 +997,14 @@ class Symbol:
                             alt_func_list.append(pin)
                         else:
                             # alternative function - check for changes in other fields
-                            if pin.get_side() != pin0.get_side():
+                            if pin.get_cat() != pin0.get_cat():
                                 raise LogicError(f'collect_alt_functions(): '
                                 f'Alternative list changes side!\n'
                                 f'pin: {pin} alt_func_list[-1]: {alt_func_list[-1]}',
                                 pin.loc)
                             if (pin.is_hidden()) or (pin.is_stacked()) \
                             or (pin0.is_hidden()) or (pin0.is_stacked()):
-                                raise SymbolBuildError(f'collect_alt_functions(): '
+                                raise SymbolError(f'collect_alt_functions(): '
                                             f'Alternative pin functions must not '
                                             f'be hidden or stacked!', pin.loc)
                             # finally append alternative function
@@ -980,21 +1027,27 @@ class Symbol:
         posy = psp.height_h - center_pins(psp.height_h, psp.pin_count_l)
         rot = PinHead.SIDE_TO_ANGLE['left']
         do_shift = False
-        collect_alt_functions(self.pins['left'], dec_posy)
+        the_side_list = \
+            [pin_item for pin_item in self.pins if pin_item.get_cat() == 'left']
+        collect_alt_functions(the_side_list, dec_posy)
 
         # right pins
         posx = psp.width_h + self.attribs[SymHead.W_PADDING]
         posy = psp.height_h - center_pins(psp.height_h, psp.pin_count_r)
         rot = PinHead.SIDE_TO_ANGLE['right']
         do_shift = False
-        collect_alt_functions(self.pins['right'], dec_posy)
+        the_side_list = \
+            [pin_item for pin_item in self.pins if pin_item.get_cat() == 'right']
+        collect_alt_functions(the_side_list, dec_posy)
 
         # top pins
         posx = (psp.width_h - center_pins(psp.width_h, psp.pin_count_t)) * -1
         posy = psp.height_h + self.attribs[SymHead.H_PADDING]
         rot = PinHead.SIDE_TO_ANGLE['top']
         do_shift = False
-        collect_alt_functions(self.pins['top'], inc_posx)
+        the_side_list = \
+            [pin_item for pin_item in self.pins if pin_item.get_cat() == 'top']
+        collect_alt_functions(the_side_list, inc_posx)
 
         # bottom pins
         #adjust = ((psp.width_h * 2) + 1 - psp.pin_count_b) // 2
@@ -1002,7 +1055,9 @@ class Symbol:
         posy = (psp.height_h + self.attribs[SymHead.H_PADDING]) * -1
         rot = PinHead.SIDE_TO_ANGLE['bottom']
         do_shift = False
-        collect_alt_functions(self.pins['bottom'], inc_posx)
+        the_side_list = \
+            [pin_item for pin_item in self.pins if pin_item.get_cat() == 'bottom']
+        collect_alt_functions(the_side_list, inc_posx)
 
 
 @dataclass
@@ -1017,11 +1072,26 @@ class SymbolProcessor:
     head_list: list = field(init=False)
     head_cols: dict[str:int] = field(init=False)
     pin_processor: PinProcessor = field(init=False)
+    symbols: dict[str:Symbol] = field(default_factory=dict)
 
     def __post_init__(self):
         self.head_list, self.head_cols = parse_header(
             SymHead.COLUMNS_NEED, self.reader, True)
         self.pin_processor = PinProcessor(self.reader)
+
+    def add_symbol(self, sym:Symbol) -> None:
+        name = sym.get_name()
+        if name in self.symbols:
+            raise SymbolError(f'Symbol: {name!r} already exists!', sym.loc)
+        self.symbols[name] = sym
+
+    def get_symbol(self, name:str, loc:Location) -> Symbol:
+        if name in self.symbols:
+            sym = self.symbols[name]
+            vpr(f'get_symbol() returns: {sym}', level=Verbosity.VERY_VERB)
+            return sym
+        else:
+            raise SymbolError(f'Symbol {name!r} does not exist!', loc)
 
     def parse_symbol(self, inp:CSVRecord) -> Tuple[CSVRecord, Optional[Symbol]]:
         """Generate one symbol from csv records and return the next record and symbol.
@@ -1050,60 +1120,124 @@ class SymbolProcessor:
                 raise SymbolError(f'Surplus symbol data field {inp.columns[i]!r}',
                                 inp.location)
             i += 1
-        # build symbol and check necessity
-        symbol = Symbol(inp.location)
+        # parse all symbol columns in order: name, derived from, extends...
+        symbol: Symbol = Symbol(inp.location)
+        derived_from: Optional[Symbol] = None
         for item in SymHead.COLUMNS_NEED:
             # get value
             column = None
-            value = ''
+            value: str = ''
             if item.name in self.head_cols:
                 column = self.head_cols[item.name]
                 value = inp.columns[column]
             vpr(f'parse_symbol: item: {item} column: {column} value: {value!r}',
                 level=Verbosity.VERY_VERB)
-            # check need
-            if not value:
-                if item.need == Need.VAL:
-                    raise SymbolError(f'Value is required for {item.name!r}',
-                                    inp.location)
-            # check extension props
-            if symbol.is_derived():
-                if value and not item.name in SymHead.EXTENSION_PROPS:
-                    raise SymbolError(f'{item.name!r} is not allowed for extension '
-                                      f'symbols in symbol: {symbol.name!r}', inp.location)
-            # add defaults
-            if not value and (item.name in SymHead.DEFAULTS):
-                value = SymHead.DEFAULTS[item.name]
-            # add value to symbol
-            if value or (item.need != Need.OPT):
-                # Need.MAN and Need.VAL are always put
-                va = convert_inp(value, item.name, SymHead.BOOL_FIELDS,
-                                    SymHead.INT_FIELDS, SymHead.FLOAT_FIELDS,
-                                    inp.location)
-                if (item.name in {SymHead.MIN_H, SymHead.MIN_W}) and value:
-                    if va % 2:
-                        raise SymbolError(f'{item.name} must be even. Value '
-                        f'is: {va} in symbol: {symbol.name!r}', inp.location)
+            if (item.name == SymHead.DERIVE_FROM) and value:
+                derived_from = self.get_symbol(value, inp.location)
+                symbol.set_derived(value)
+            # try to get attribute from parent if no value
+            derived_attr = None
+            if derived_from and not value:
+                derived_attr = derived_from.get_attr(item.name)
+            if not derived_attr is None:
+                symbol.add_attr(item.name, derived_attr)
+            else:
+                # check need
+                if not value:
+                    if item.need == Need.VAL:
+                        raise SymbolError(f'Value is required for {item.name!r}',
+                                        inp.location)
+                # check extension props
+                if symbol.is_extension():
+                    if value and not item.name in SymHead.EXTENSION_PROPS:
+                        raise SymbolError(f'{item.name!r} is not allowed for extension '
+                                        f'symbols in symbol: {symbol.get_name()!r}', inp.location)
+                # add defaults
+                if not value and (item.name in SymHead.DEFAULTS):
+                    value = SymHead.DEFAULTS[item.name]
+                # add value to symbol
+                if value or (item.need != Need.OPT):
+                    # Need.MAN and Need.VAL are always put
+                    va = convert_inp(value, item.name, SymHead.BOOL_FIELDS,
+                                        SymHead.INT_FIELDS, SymHead.FLOAT_FIELDS,
+                                        inp.location)
+                    if (item.name in {SymHead.MIN_H, SymHead.MIN_W}) and value:
+                        if va % 2:
+                            raise SymbolError(f'{item.name} must be even. Value '
+                            f'is: {va} in symbol: {symbol.get_name()!r}', inp.location)
 
-                symbol.add_attr(item.name, va)
+                    symbol.add_attr(item.name, va)
         # get pins
         previous_pin = None
+        ov_pins = []
         while True:
             new_inp = self.reader.get_nonempty_line()
             if (new_inp.columns == Const.EOT) or new_inp.columns[0]:
                 # symbol end or EOT
+                if derived_from:
+                    overload_pins(symbol, derived_from.pins, ov_pins)
+                self.add_symbol(symbol)
                 vpr(f'parse_symbol returns: {symbol!r}', level=Verbosity.VERBOSE)
                 return new_inp, symbol
             # (more) pin(s) encountered
-            if symbol.is_derived():
+            if symbol.is_extension():
                 raise SymbolError(f'No pin definition allowed for a Derived symbol: '
-                                f'{symbol.name!r}', new_inp.location)
+                                f'{symbol.get_name()!r}', new_inp.location)
             # get pin
             pin = self.pin_processor.parse_pin(new_inp, previous_pin)
-            symbol.add_pin(pin)
-            # keep previous pin when separator or gap is encountered
-            if not pin.is_gap():
+            # handle derived from
+            if derived_from:
+                ov_pins.append(pin)
+            else:
+                if pin.is_pseudo_pin():
+                    raise PinError(f'Pin Category: {pin.get_cat()!r} is not allowed '
+                                   f'for base symbols!', new_inp.location)
+                symbol.add_pin(pin)
+            # keep previous pin when gap or pseudo-pin is encountered
+            if not pin.is_gap() and not pin.is_pseudo_pin():
                 previous_pin = pin
+
+
+def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]) -> None:
+    new_pins = base_pins.copy()
+    ins_index = None
+    for pin in derived_sym_pins:
+        p_num = pin.get_number()
+        if pin.is_pseudo_pin():
+            category = pin.get_cat()
+            if category == 'delete':
+                ins_index = None
+                del_list = [idx for idx, pn in enumerate(new_pins) \
+                            if pn.get_number() == p_num]
+                if not del_list:
+                    raise PinError(f'Pin number to delete not found! Number: {p_num}',
+                                    pin.loc)
+                del_list.reverse()
+                vpr(f'overload_pins(): Delete pins {del_list}', level=Verbosity.VERY_VERB)
+                for x in del_list:
+                    del new_pins[x]
+            elif (category == 'before') or (category == 'after'):
+                p_list = [idx for idx, pn in enumerate(new_pins) \
+                          if pn.get_number() == p_num]
+                if not p_list:
+                    raise PinError(f'Pin number to insert not found! Number: {p_num!r}',
+                                   pin.loc)
+                if category == 'before':
+                    ins_index = p_list[0]
+                else:
+                    ins_index = p_list[-1] + 1
+                vpr(f'overload_pins(): Insert marker at {ins_index}', level=Verbosity.VERY_VERB)
+            else:
+                raise LogicError(f'Invalide overwrite operation: {category!r}', pin.loc)
+        else:
+            if ins_index is None:
+                raise PinError(f'No insertion marker defined! Pin Number: {p_num!r}',
+                               pin.loc)
+            vpr(f'overload_pins(): Inset pin {p_num} at index {ins_index}',
+                level=Verbosity.VERY_VERB)
+            new_pins.insert(ins_index, pin)
+            ins_index += 1
+    symbol.pins = new_pins    
 
 
 def parse_header(head_prop:list[ColumnProp], reader:MyCSVReader,
@@ -1268,11 +1402,11 @@ class KicadLibWrapper:
 
     def add_symbol(self, sym:kicad.KicadSymbol, loc:Location) -> None:
         if sym.name in self.symbol_names:
-            raise SymbolBuildError(f'Symbol with name {sym.name!r} already exists!', loc)
+            raise SymbolError(f'Symbol with name {sym.name!r} already exists!', loc)
         if sym.extends:
             parent = sym.extends
             if not parent in self.symbol_names:
-                raise SymbolBuildError(f'Extension symbol not defined {parent!r}!', loc)
+                raise SymbolError(f'Extension symbol not defined {parent!r}!', loc)
 
         self.lib.symbols.append(sym)
         self.symbol_names.add(sym.name)
@@ -1316,6 +1450,7 @@ def main():
                 failures = 0
                 symbol_count = 0
                 while (csv_rec.columns == None) or (csv_rec.columns != Const.EOT):
+                    new_csv_rec = None
                     try:
                         if csv_rec.columns == None:
                             csv_rec = reader.get_nonempty_line()
@@ -1325,7 +1460,7 @@ def main():
                             csv_rec = reader.get_nonempty_line()
                             vpr(f'main loop skip line inp: {csv_rec.columns}',
                                 level=Verbosity.VERY_VERB)
-                        csv_rec, symbol = sym_proc.parse_symbol(csv_rec)
+                        new_csv_rec, symbol = sym_proc.parse_symbol(csv_rec)
                         if symbol:
                             kicad_symbol = symbol.build_symbol(
                                 kicad_lib.get_filename(), kicad_lib.lib)
@@ -1334,10 +1469,11 @@ def main():
                     except (PinError, SymbolError, ValidationError) as error:
                         failures += 1
                         print(error.__class__.__name__, error, file=sys.stderr)
-                        csv_rec = CSVRecord(None, reader.get_location())
-                    except SymbolBuildError as error:
-                        failures += 1
-                        print(error.__class__.__name__, error, file=sys.stderr)
+                        if new_csv_rec is None:
+                            new_csv_rec = CSVRecord(None, reader.get_location())
+                    if new_csv_rec is None:
+                        raise LogicError(f'main: new_csv_rec is None!', csv_rec.location)
+                    csv_rec = new_csv_rec
 
                 vpr(f'End file: {inputfile!r} ',
                     f'{csv_rec.location.line} line(s) processed. ',

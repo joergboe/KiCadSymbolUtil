@@ -1,5 +1,5 @@
 Symbol Name,,,Footprint,Description,Datasheet,Keywords
-,PIN side,PIN number,PIN name,pin EL Type,PIN gr type,
+,PIN category,PIN number,PIN name,pin EL Type,PIN gr type,
 ,,,,Description,,
 # one pin record,skipped,,,,,
 SYMZ,,,,,,

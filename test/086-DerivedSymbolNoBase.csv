@@ -1,0 +1,11 @@
+Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,extends,text,Derive From,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap,text gap
+,PIN category,PIN number,PIN name,pin EL Type,PIN gr type,pin length,pin stacked,pin hidden,,name font size,number font size,,,,,,,,,,,
+SYM1,,,,,,,,A,,,,,,,,,,,,,,
+,left,1,A,input,,2.0,,,,,,,,,,,,,,,,
+,right,13,O1,output,,,,,,,,,,,,,,,,,,
+,right,14,~{O1},output,inverted,,,,,,,,,,,,,,,,,
+# base,not,exisiting,,,,,,,,,,,,,,,,,,,,
+SYM2,,,,,,,,SYM2,SYMX,,,,,,,,,,,,,
+,delete,14,,,,,,,,,,,,,,,,,,,,
+SYMZ,,,,,,,,SYMZ,,,,,,,,,,,,,,
+# 2 Symbols,generated,1 Failures,,,,,,,,,,,,,,,,,,,,

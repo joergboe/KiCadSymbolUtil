@@ -1,5 +1,6 @@
 Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,extends,text,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap
-,PIN side,PIN number,PIN name,pin EL Type,PIN gr type,,,,,,,,,,,,,,,
+,PIN category,PIN number,PIN name,pin EL Type,PIN gr type,,,,,,,,,,,,,,,
 SYM1,,,,,,,,A,,,,,,,,,,,,
 ,left,1,,input,,,,,,,,,,,,,,,,
 SYMZ,,,,,,,,Z,,,,,,0,0,0.25,0.25,20,0.5,0.5
+# 2 symbols,generated,,,,,,,,,,,,,,,,,,,
