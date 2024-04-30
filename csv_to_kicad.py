@@ -22,8 +22,14 @@ class Const:
     EOT = '\x04'    # ascii 'End of Text'
     # kicad needs
     # see: https://klc.kicad.org/symbol/
-    GRID = 2.54     # 100 mills - the pin grid for KiCat symbols
-    BODY_LINE_WIDTH = 10.0        # 10 mills
+    GRID = 2.54                 # 100 mills - the pin grid for KiCat symbols
+    BODY_LINE_WIDTH = 10.0      # 10 mills
+    HIDDEN_TEXT_GAP = 1.0       # in pin grid units
+    TEXT_GAP = 1.0              # text gap for small symbols
+    TEXT_GAP_BIG_SYM = 2.5      # text gap for big symbols
+    TEXT_GAP_VERY_BIG_SYM = 5.5
+    PIN_COUNT_BIG_SYM = 5       # min pin count for big symbols
+    PIN_COUNT_VERY_BIG_SYM = 15
 
 
 class Need(Enum):
@@ -112,7 +118,7 @@ class SymHead:
                 W_PADDING: '1.0',
                 H_PADDING: '1.0',
                 TEXT_FONT_SIZE: '50',
-                TEXT_GAP: '1.0',
+                TEXT_GAP: '0.0',
                 H_REF_VALUE_GAP: '0.5',
                 W_REF_VALUE_PIN_GAP: '0.75'}
 
@@ -121,8 +127,10 @@ class SymHead:
             FOOTPRINT: 'Footprint', DATASHEET: 'Datasheet',
             KEYWORDS: 'ki_keywords', DESCRIPTION: 'Description',
             FP_FILTERS: 'ki_fp_filters'}
-    MAN_PROPS = [REFERENCE, VALUE, FOOTPRINT, DATASHEET, KEYWORDS, DESCRIPTION]
+    MAN_PROPS = [REFERENCE, VALUE, DESCRIPTION, DATASHEET, FOOTPRINT, KEYWORDS]
     OPT_PROPS = [FP_FILTERS]
+    # Hidden text fields to shift away from 0, 0
+    HIDDEN_PROPS_TO_SHIFT = {DESCRIPTION, DATASHEET, FOOTPRINT}
     # Properties valid for extension symbols (except name & extends)
     EXTENSION_PROPS = {REFERENCE, FOOTPRINT, DATASHEET, DESCRIPTION, KEYWORDS,
                        FP_FILTERS}
@@ -829,10 +837,14 @@ class Symbol:
         psp = self.get_pin_shape()
         new_symbol = kicad.KicadSymbol(self.get_name(), libname, filename)
         # add text properties
+        py = 0.5
         for p in SymHead.MAN_PROPS:
             prop = kicad.Property(SymHead.KICAD_PROPERTY_NAMES[p], self.attribs[p],
                                   None)
             prop.effects.is_hidden = True
+            if p in SymHead.HIDDEN_PROPS_TO_SHIFT:
+                prop.posy = py * Const.GRID
+                py += Const.HIDDEN_TEXT_GAP
             new_symbol.properties.append(prop)
         for p in SymHead.OPT_PROPS:
             if p in self.attribs and self.attribs[p]:
@@ -889,8 +901,18 @@ class Symbol:
         # place symbol text
         if (SymHead.TEXT in self.attribs) and self.attribs[SymHead.TEXT]:
             title = self.attribs[SymHead.TEXT]
-            posy = psp.height_h + self.attribs[SymHead.H_PADDING] - \
-                self.attribs[SymHead.TEXT_GAP]
+            my_text_gap = self.attribs[SymHead.TEXT_GAP]
+            # if no special text gap is given, the value depends on symbol size
+            if my_text_gap == float(SymHead.DEFAULTS[SymHead.TEXT_GAP]):
+                pin_max = max(psp.pin_count_l, psp.pin_count_r)
+                if pin_max > Const.PIN_COUNT_VERY_BIG_SYM:
+                    my_text_gap = Const.TEXT_GAP_VERY_BIG_SYM
+                elif pin_max > Const.PIN_COUNT_BIG_SYM:
+                    my_text_gap = Const.TEXT_GAP_BIG_SYM
+                else:
+                    my_text_gap = Const.TEXT_GAP
+            vpr(f'build_symbol: text gap result: {my_text_gap}', level=Verbosity.VERBOSE)
+            posy = psp.height_h + self.attribs[SymHead.H_PADDING] - my_text_gap
             if posy < 0.0:
                 posy = 0.0
             posy_mm = posy * Const.GRID
