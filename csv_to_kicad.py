@@ -194,18 +194,29 @@ class PinHead:
         head_list -- a copy of the head line as list[str]
         head_cols -- the assignement title -> column number as dict[int]
     """
-    
+
+    GAP = '---'        # special number for single gap in the pin row
+    GAP_REX_ANY = r'---+.*' 
+    GAP_REX_N1 = r'---+$'
+    GAP_REX_N = r'---+\s*(\d+)$'
+
     def is_gap(value:str) -> bool:
-        return value.startswith(PinHead.GAP)
+        the_match = re.match(PinHead.GAP_REX_ANY, value)
+        if the_match:
+            return True
+        else:
+            return False
     
-    def get_gap_count(value:str) -> int:
-        res = 0
-        if PinHead.is_gap(value):
-            REX = r'---\s*(\d+)'
-            the_match = re.match(REX, value)
+    def get_gap_count(value:str) -> Optional[int]:
+        res = None
+        the_match = re.match(PinHead.GAP_REX_N, value)
+        if the_match:
+            res = int(the_match.group(1))
+            if res < 1:
+                res = None
+        else:
+            the_match = re.match(PinHead.GAP_REX_N1, value)
             if the_match:
-                res = int(the_match.group(1))
-            else:
                 res = 1
         vpr(f'get_gap_count({value}) returns: {res}', level=Verbosity.VERY_VERB)
         return res
@@ -245,8 +256,6 @@ class PinHead:
         }
 
     SIDE_TO_ANGLE = {'left': 0, 'right': 180, 'bottom': 90, 'top': 270}
-
-    GAP = '---'        # special number for single gap in the pin row
 
     CATS_FOR_DERIVED = {'delete', 'before', 'after'}
 
@@ -347,6 +356,7 @@ class Location:
 
     def __str__(self) -> str:
         return f'File: {self.file!r} Record: {self.record} Line: {self.line}.'
+
 
 class CsvToKicadError(Exception):
     """Superclass for all thrown errors"""
@@ -455,7 +465,11 @@ class Pin:
     def get_gap_count(self) -> int:
         if not PinHead.NUMBER in self.attribs:
             raise LogicError('in is_separator_or_gap()', self.loc)
-        return PinHead.get_gap_count(self.attribs[PinHead.NUMBER])
+        value = self.attribs[PinHead.NUMBER]
+        res = PinHead.get_gap_count(value)
+        if res is None:
+            raise PinError(f'No valid get_gap_count: value: {value!r}', self.loc)
+        return res
 
     def is_hidden(self) -> bool:
         return PinHead.HIDDEN in self.attribs and self.attribs[PinHead.HIDDEN]
@@ -837,9 +851,13 @@ class Symbol:
         # place reference and value on top if bottom pins are present
         if psp.pin_count_b or psp.pin_count_t:
             pyval = pyref
-            px_first_top_pin = \
-                (psp.width_h - center_pins(psp.width_h, psp.pin_count_t)) * -1
-            px_last_top_pin = px_first_top_pin + psp.pin_count_t - 1
+            if psp.pin_count_t:
+                px_first_top_pin = \
+                    (psp.width_h - center_pins(psp.width_h, psp.pin_count_t)) * -1
+                px_last_top_pin = px_first_top_pin + psp.pin_count_t - 1
+            else:
+                px_first_top_pin = 0
+                px_last_top_pin = 0
             pxref = (px_first_top_pin - self.attribs[SymHead.W_REF_VALUE_PIN_GAP]) \
                 * Const.GRID
             pxval = (px_last_top_pin + self.attribs[SymHead.W_REF_VALUE_PIN_GAP]) \
