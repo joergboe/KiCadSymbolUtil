@@ -148,7 +148,9 @@ class SymHead:
         PIN_NAME_OFFSET: 'The pin name offset in mills.',
         TEXT_FONT_SIZE: 'Font size for text box in mills.',
         TEXT_GAP: 'Gap between the top of the main body rectangel and the text box '
-        'in pin grid units. Fractions possible', 
+        'in pin grid units. Fractions possible.\n'
+        f'The text gap is determined depending on the vertical pin count: {Const.TEXT_GAP}, '
+        f'{Const.TEXT_GAP_BIG_SYM} and {Const.TEXT_GAP_VERY_BIG_SYM}', 
         H_REF_VALUE_GAP: 'Vertical distance from symbol body to Reference and Value '
         'in pin grid units.',
         W_REF_VALUE_PIN_GAP: 'Horizontal distance from pin to Reference and Value '
@@ -185,9 +187,9 @@ class SymHead:
             res += f'{item.name.title()} --\t{NEED_DESCR[item.need.value]}  '\
                 f'Type:{the_type}  Default: {default}\n'
             if item.name in cls.INFO:
-                res += cls.INFO[item.name]
-                res += '\n'
-            res += f'\nA pin grid unit is {Const.GRID} mm\n'
+                res += cls.INFO[item.name] + '\n'
+            res += '\n'
+        res += f'A pin grid unit is {Const.GRID} mm\n'
         return res
 
 
