@@ -727,7 +727,8 @@ def get_bus_build_schema(name:str, loc:Location) -> BusBuildSchema:
 
 
 PinShapeProps = namedtuple('PinShapeProps',
-'width_h height_h pin_count_l pin_count_r pin_count_t pin_count_b')
+'width_h height_h pin_count_l pin_count_r pin_count_t pin_count_b '
+'len_l, len_r, len_t, len_b')
 
 @dataclass
 class Symbol:
@@ -777,6 +778,14 @@ class Symbol:
     def get_derived(self) -> str:
         return self.attribs[SymHead.DERIVE_FROM]
 
+    def get_max_pin_len(self, side:str) -> float:
+        res = 0.0
+        for pin in self.pins:
+            if pin.get_cat() == side and not pin.is_gap() and not pin.is_pseudo_pin():
+                res = max(res, pin.get_attr(PinHead.LEN))
+        vpr(side, 'get_max_pin_len returns:', res, level=Verbosity.VERY_VERB)
+        return res
+
     def get_effective_pin_count(self, side:str) -> int:
         """Get the count of the effective pin count in list pins
 
@@ -799,7 +808,7 @@ class Symbol:
                 elif (previous_pin_number != pin_number):
                     count += len(pin_number.split(','))
                 previous_pin_number = pin_number
-        vpr(side, 'get_effective_pin_count returns', count, level=Verbosity.VERBOSE)
+        vpr(side, 'get_effective_pin_count returns:', count, level=Verbosity.VERBOSE)
         return count
 
     def get_pin_shape(self) -> PinShapeProps:
@@ -826,7 +835,9 @@ class Symbol:
                 f'Symbol name: {self.get_name()} {self.loc}', level=Verbosity.VERBOSE)
             height_half = m_h_h
         psp = PinShapeProps(width_half, height_half, pin_count_l, pin_count_r,
-                        pin_count_t, pin_count_b)
+                        pin_count_t, pin_count_b,
+                        self.get_max_pin_len('left'), self.get_max_pin_len('right'),
+                        self.get_max_pin_len('top'), self.get_max_pin_len('bottom'))
 
         vpr(f'get_pin_shape: psp.width_h={psp.width_h} psp.height_h={psp.height_h} '
             f'count_l={pin_count_l} count_r={pin_count_r} count_t={pin_count_t} '
@@ -839,14 +850,16 @@ class Symbol:
         psp = self.get_pin_shape()
         new_symbol = kicad.KicadSymbol(self.get_name(), libname, filename)
         # add text properties
-        py = 0.5
+        py = psp.height_h + psp.len_b + self.get_attr(SymHead.H_PADDING) + \
+            Const.HIDDEN_TEXT_GAP
+        py = py * -1
         for p in SymHead.MAN_PROPS:
             prop = kicad.Property(SymHead.KICAD_PROPERTY_NAMES[p], self.attribs[p],
                                   None)
             prop.effects.is_hidden = True
             if p in SymHead.HIDDEN_PROPS_TO_SHIFT:
                 prop.posy = py * Const.GRID
-                py += Const.HIDDEN_TEXT_GAP
+                py -= Const.HIDDEN_TEXT_GAP
             new_symbol.properties.append(prop)
         for p in SymHead.OPT_PROPS:
             if p in self.attribs and self.attribs[p]:
