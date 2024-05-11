@@ -2,7 +2,7 @@
 """Generate a kicat symbol library from lib.csv files."""
 
 __author__ = "joergboe"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 from io import TextIOWrapper
 import sys
@@ -335,7 +335,8 @@ class PinHead:
                 res += cls.INFO[item.name]
                 res += '\n'
             res += "\n"
-        res += f'''If the pin number has a value {cls.GAP!r}
+        res += f'''Pin numbers must be unique in one symbol.
+            If the pin number has a value {cls.GAP!r}
             or "{cls.GAP} n" no pin is generated at n positions. You can
             use gaps to group pins into sections.
             Sticky fields are copied from the previous line within a symbol.
@@ -353,6 +354,11 @@ class PinHead:
             incrementing by 2.
             The symbol '$(16-1)' is replaced by a serial number starting with 16 and 
             decrementing by 1.
+
+            A function group (bus) can also define alternative functions. In this
+            case the alternative function must follow immediately and 'pin number'
+            list must be a subset of the main 'pin number' list. The generation
+            of the serial number works independently for each alternative function.
             '''
         return res
 
@@ -507,6 +513,29 @@ class Pin:
         if not PinHead.NAME in self.attribs:
             raise LogicError(f'No attribute {PinHead.NAME!r}', self.loc)
         return self.attribs[PinHead.NAME]
+
+    def is_bus(self) -> bool:
+        return ',' in self.get_number()
+    
+    def get_checked_bus_pin_list(self) -> list[str]:
+        """Get the bus pin list and check against duplicate elements"""
+        elems = [item.strip() for item in self.get_number().split(',')]
+        check = set()
+        for item in elems:
+            if item in check:
+                raise PinError(f'Duplicate pin: {item!r} in bus: {elems}', self.loc)
+            check.add(item)
+        return elems
+
+    def is_alt_func_pin(self, next_pin) -> bool:
+        if self.is_gap() or next_pin.is_gap():
+            return False
+        if self.is_bus():
+            my_pin_numbers = set(self.get_checked_bus_pin_list())
+            new_pin_list = set(next_pin.get_checked_bus_pin_list())
+            return new_pin_list <= my_pin_numbers
+        else:
+            return self.get_number() == next_pin.get_number()
 
 
 def convert_to_bool(val:str, column_name:str, loc:Location) -> bool:
@@ -787,27 +816,38 @@ class Symbol:
         return res
 
     def get_effective_pin_count(self, side:str) -> int:
-        """Get the count of the effective pin count in list pins
+        """Get the count of the effective pin count of one side and check conditions
 
         The effective pin count is the count of the pins in list pins minus number
         of alternative functions. Stacked pins are counted as 1.
         Separators and gaps are counted."""
         count = 0
-        previous_pin_number = ""
+        main_pin:Pin = None
         for pin in self.pins:
             if pin.get_cat() == side:
-                pin_number = pin.get_number()
-                pin_stacked = pin.is_stacked()
-                if pin_stacked and (previous_pin_number == pin_number):
-                    raise SymbolError(f'get_effective_pin_count(): stacked and '
-                                      f'alternate not allowed in : {pin}', pin.loc)
-                if pin_stacked:
-                    pass
+                if pin.is_pseudo_pin():
+                    raise LogicError(f'get_effective_pin_count(): No pseudo pins '
+                                     f'allowed here!', pin.loc)
+                if pin.is_stacked():
+                    if main_pin and main_pin.is_alt_func_pin(pin):
+                        raise PinError(f'get_effective_pin_count(): alternative '
+                            f'function must not be stacked: {pin}', pin.loc)
+                    main_pin = None
                 elif pin.is_gap():
                     count += pin.get_gap_count()
-                elif (previous_pin_number != pin_number):
-                    count += len(pin_number.split(','))
-                previous_pin_number = pin_number
+                    main_pin = None
+                elif main_pin is None:
+                    count += len(pin.get_checked_bus_pin_list())
+                    main_pin = pin
+                else:
+                    if main_pin.is_alt_func_pin(pin):
+                        if pin.is_hidden() != main_pin.is_hidden():
+                            raise PinError(f'get_effective_pin_count(): alternative '
+                            f'function hidden: {pin.is_hidden()} Main pin hidden: '
+                            f'{main_pin.is_hidden()} combination not allowed!', pin.loc)
+                    else:
+                        count += len(pin.get_checked_bus_pin_list())
+                        main_pin = pin
         vpr(side, 'get_effective_pin_count returns:', count, level=Verbosity.VERBOSE)
         return count
 
@@ -951,20 +991,22 @@ class Symbol:
         Goes through all 4 sides left, right, top and bottom
         """
 
+        pin_number_set = set()
+
         def collect_alt_functions(side_pin_list:list[Pin], shift_pos) -> None:
             """Collect all associated alternative functions of one pin in alt_func_list
             
             Goes through side_pin_list, collects the alternative functions of a pin
             in alt_func_list, shifts position and calls build_bus for each pin
             """
-            alt_func_list = []
+            alt_func_list:list[Pin] = []
 
             def build_bus() -> None:
                 """Gets the alt_func_list and calls the build_pin for each pin number
 
                 Clear alt_func_list after pin creation
                 """
-                alt_func_list_single = []
+                alt_func_list_single:list[Pin] = []
 
                 def build_pin() -> kicad.Pin:
                     """Build a KiCad Pin object from alt_func_list_single and return
@@ -976,6 +1018,11 @@ class Symbol:
                     if not alt_func_list_single:
                         raise LogicError(f'build_pin(): with empty alt_func_list_single!',
                                          self.loc)
+                    # check pin number uniqueness
+                    p_n = alt_func_list_single[0].get_number()
+                    if p_n in pin_number_set:
+                        raise PinError(f'duplicate pin number {p_n}', alt_func_list_single[0].loc)
+                    pin_number_set.add(p_n)
                     # check if pin len + padding is a integer multiple of grid
                     p_len = alt_func_list_single[0].get_attr(PinHead.LEN)
                     if (rot == 0) or (rot == 180):
@@ -1005,8 +1052,7 @@ class Symbol:
                 if not alt_func_list:
                     raise LogicError(f'build_bus(): with empty alt_func_list!',
                                      self.loc)
-                pin_number_list = [item.strip() \
-                            for item in alt_func_list[0].get_number().split(',')]
+                pin_num_list = alt_func_list[0].get_checked_bus_pin_list()
                 alt_funcs_name_schemas = []
                 alt_funcs_name_serial = []
                 for alt_func in alt_func_list:
@@ -1014,17 +1060,19 @@ class Symbol:
                     alt_funcs_name_schemas.append(bbs)
                     alt_funcs_name_serial.append(bbs.start)
 
-                for pin_number in pin_number_list:
+                for pin_number in pin_num_list:
                     alt_func_list_single.clear()
                     i = 0
                     for alt_func in alt_func_list:
-                        bus_pin = clone_bus_pin(alt_func, pin_number, 
+                        alt_func_pin_num_list = set(alt_func.get_checked_bus_pin_list())
+                        if pin_number in alt_func_pin_num_list:
+                            bus_pin = clone_bus_pin(alt_func, pin_number, 
                                                 alt_funcs_name_schemas[i].rex,
                                                 alt_funcs_name_serial[i])
-                        vpr(f'append to alt_func_list_single - Pin:{bus_pin}',
-                            level=Verbosity.VERY_VERB)
-                        alt_func_list_single.append(bus_pin)
-                        alt_funcs_name_serial[i] += alt_funcs_name_schemas[i].increment
+                            vpr(f'append to alt_func_list_single - Pin:{bus_pin}',
+                                level=Verbosity.VERY_VERB)
+                            alt_func_list_single.append(bus_pin)
+                            alt_funcs_name_serial[i] += alt_funcs_name_schemas[i].increment
                         i += 1
                     build_pin()
                 alt_func_list.clear()
@@ -1045,8 +1093,8 @@ class Symbol:
                     if not alt_func_list:
                         alt_func_list.append(pin)
                     else:
-                        pin0 = alt_func_list[-1]
-                        if pin.get_number() != pin0.get_number():
+                        pin0 = alt_func_list[0]
+                        if not pin0.is_alt_func_pin(pin):
                             # next physical pin
                             build_bus()
                             alt_func_list.append(pin)
@@ -1057,11 +1105,6 @@ class Symbol:
                                 f'Alternative list changes side!\n'
                                 f'pin: {pin} alt_func_list[-1]: {alt_func_list[-1]}',
                                 pin.loc)
-                            if (pin.is_hidden()) or (pin.is_stacked()) \
-                            or (pin0.is_hidden()) or (pin0.is_stacked()):
-                                raise SymbolError(f'collect_alt_functions(): '
-                                            f'Alternative pin functions must not '
-                                            f'be hidden or stacked!', pin.loc)
                             # finally append alternative function
                             alt_func_list.append(pin)
             # end side_pin_list
@@ -1262,8 +1305,20 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
             category = pin.get_cat()
             if category == 'delete':
                 ins_index = None
-                del_list = [idx for idx, pn in enumerate(new_pins) \
-                            if pn.get_number() == p_num]
+                del_list = []
+                idx = 0
+                alt_functs = False
+                for pn in new_pins:
+                    if not alt_functs:
+                        if pin.get_checked_bus_pin_list() == pn.get_checked_bus_pin_list():
+                            del_list.append(idx)
+                            alt_functs = True
+                    else:
+                        if pin.is_alt_func_pin(pn):
+                            del_list.append(idx)
+                        else:
+                            alt_functs = False
+                    idx += 1
                 if not del_list:
                     raise PinError(f'Pin number to delete not found! Number: {p_num}',
                                     pin.loc)
@@ -1272,8 +1327,20 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
                 for x in del_list:
                     del new_pins[x]
             elif (category == 'before') or (category == 'after'):
-                p_list = [idx for idx, pn in enumerate(new_pins) \
-                          if pn.get_number() == p_num]
+                p_list = []
+                idx = 0
+                alt_functs = False
+                for pn in new_pins:
+                    if not alt_functs:
+                        if pin.get_checked_bus_pin_list() == pn.get_checked_bus_pin_list():
+                            p_list.append(idx)
+                            alt_functs = True
+                    else:
+                        if pin.is_alt_func_pin(pn):
+                            p_list.append(idx)
+                        else:
+                            alt_functs = False
+                    idx += 1
                 if not p_list:
                     raise PinError(f'Pin number to insert not found! Number: {p_num!r}',
                                    pin.loc)
