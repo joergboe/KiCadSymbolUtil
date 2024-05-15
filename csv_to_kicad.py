@@ -1562,7 +1562,11 @@ def main():
     all_skipped_pins = 0
 
     # the libname of the file and the library object needs to be the same
-    kicad_lib = KicadLibWrapper(arguments.output)
+    if isinstance(arguments.output, str):
+        libname = arguments.output
+    else:
+        libname = arguments.output[0]
+    kicad_lib = KicadLibWrapper(libname)
     vpr(f'Create kicad_lib: {kicad_lib.get_filename()}')
 
     for inputfile in arguments.inputfiles:
