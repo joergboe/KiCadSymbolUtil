@@ -628,12 +628,13 @@ class PinProcessor:
         self.head_list, self.head_cols = parse_header(
             PinHead.COLUMNS_NEED, self.reader, False)
 
-    def parse_pin(self, inp:CSVRecord, previous_pin:Pin) -> Pin: 
+    def parse_pin(self, inp:CSVRecord, previous_pin:Pin, previous_cat:str) -> Pin: 
         """Process one pin record and return a validated pin-dict.
 
         Arguments:
         inp          -- csv record and location to process
         previous_pin -- previous pin or None
+        previous_cat -- previous pin category or empty
         Globals:
         PinHead      -- class attributes
         vpr          -- the log printer 
@@ -686,10 +687,14 @@ class PinProcessor:
             if check_fields:
                 # propagate sticky fields if necessary and possible
                 if (not value) and (item.name in PinHead.STICKY_FIELDS):
-                    if previous_pin and previous_pin.has_attr(item.name):
-                        v_str = str(previous_pin.get_attr(item.name))
-                        if v_str:
-                            value = v_str
+                    if item.name == PinHead.CAT:
+                        if previous_cat:
+                            value = previous_cat
+                    else:
+                        if previous_pin and previous_pin.has_attr(item.name):
+                            v_str = str(previous_pin.get_attr(item.name))
+                            if v_str:
+                                value = v_str
                 # check need
                 if not value:
                     if item.need == Need.VAL:
@@ -1267,6 +1272,7 @@ class SymbolProcessor:
                     symbol.add_attr(item.name, va)
         # get pins
         previous_pin = None
+        previous_cat = ''
         ov_pins = []
         while True:
             new_inp = self.reader.get_nonempty_line()
@@ -1282,7 +1288,7 @@ class SymbolProcessor:
                 raise SymbolError(f'No pin definition allowed for a Derived symbol: '
                                 f'{symbol.get_name()!r}', new_inp.location)
             # get pin
-            pin = self.pin_processor.parse_pin(new_inp, previous_pin)
+            pin = self.pin_processor.parse_pin(new_inp, previous_pin, previous_cat)
             # handle derived from
             if derived_from:
                 ov_pins.append(pin)
@@ -1294,6 +1300,8 @@ class SymbolProcessor:
             # keep previous pin when gap or pseudo-pin is encountered
             if not pin.is_gap() and not pin.is_pseudo_pin():
                 previous_pin = pin
+            # save previous cat in any case
+            previous_cat = pin.get_cat()
 
 
 def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]) -> None:
