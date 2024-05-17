@@ -2,7 +2,7 @@
 """Generate a kicat symbol library from lib.csv files."""
 
 __author__ = "joergboe"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
 from io import TextIOWrapper
 import sys
@@ -303,8 +303,11 @@ class PinHead:
         'A pin of a derived symbol overwrites the pin of the parent symbol with the\n'
         'matching number. The same applies to a pin list (bus). A pin list of the\n'
         'derived symbol must be a exact match to one of the pin lists of the parent\n'
-        'symbol. The overwrite pin replaces the complete pin including alternative functions.\n'
-        'The "delete" category removes an inherited pin number from the symbol.\n'
+        'symbol. The overwrite pin replaces the complete parent pin including all\n'
+        'alternative functions.\n'
+        'The category "delete" removes an inherited pin or pin list including all\n'
+        'alternative functions from and sets the insertion point.\n'
+        'Subsequent "real" pins are inserted in place of the deleted pin.\n'
         'The categories "before" and "after" put the insertion marker in place of\n'
         'the pin number. Subsequent "real" pins are inserted at this insertion mark.\n'
         'A pseudo-pin with category "overwrite" removes the insertion mark and\n'
@@ -1320,14 +1323,14 @@ class SymbolProcessor:
 
 def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]) -> None:
     ins_index = None
-    current_overload_pin:Pin = None
+    current_ovl_pin:Pin = None
     ovl_index = None
     new_pins = base_pins.copy()
 
     def clear_index():
-        nonlocal ins_index, current_overload_pin, ovl_index
+        nonlocal ins_index, current_ovl_pin, ovl_index
         ins_index = None
-        current_overload_pin = None
+        current_ovl_pin = None
         ovl_index = None
 
     def get_clear_list(derived_pin:Pin) -> list[int]:
@@ -1359,11 +1362,14 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
                 if not del_list:
                     raise PinError(f'Pin number to delete not found! Number: {p_num!r}',
                                     pin.loc)
+                ins_index = del_list[0]
                 del_list.reverse()
-                vpr(f'overload_pins(): Delete pins {del_list}', level=Verbosity.VERY_VERB)
+                vpr(f'overload_pins(): Delete pins {del_list} Insert marker at {ins_index}',
+                    level=Verbosity.VERY_VERB)
                 for x in del_list:
                     del new_pins[x]
             elif (category == PinHead.BEFORE) or (category == PinHead.AFTER):
+                clear_index()
                 p_list = []
                 idx = 0
                 alt_functs = False
@@ -1390,8 +1396,6 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
                 raise LogicError(f'Invalide overwrite operation: {category!r}', pin.loc)
         else:
             if not ins_index is None:
-                #raise PinError(f'No insertion marker defined! Pin Number: {p_num!r}',
-                #               pin.loc)
                 vpr(f'overload_pins(): Insert pin {p_num!r} at index {ins_index}',
                     level=Verbosity.VERY_VERB)
                 new_pins.insert(ins_index, pin)
@@ -1399,14 +1403,14 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
             else:
                 done = False
                 if not ovl_index is None:
-                    if current_overload_pin.is_alt_func_pin(pin):
+                    if current_ovl_pin.is_alt_func_pin(pin):
                         vpr(f'overload_pins(): Overload: insert pin {p_num!r} at index {ovl_index}',
                             level=Verbosity.VERY_VERB)
                         new_pins.insert(ovl_index, pin)
                         ovl_index += 1
                         done = True
                     else:
-                        vpr(f'overload_pins(): Overload: end alt func list for pin {p_num!r}',
+                        vpr(f'overload_pins(): Overload: end alt func list. New pin {p_num!r}',
                             level=Verbosity.VERY_VERB)
                         clear_index()
                 if not done:
@@ -1415,7 +1419,7 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
                         raise PinError(f'Pin number to overload not found! Number: {p_num!r}',
                             pin.loc)
                     ovl_index = del_list[0]
-                    current_overload_pin = pin
+                    current_ovl_pin = pin
                     del_list.reverse()
                     vpr(f'overload_pins(): Overload: delete pins {del_list}', level=Verbosity.VERY_VERB)
                     for x in del_list:
