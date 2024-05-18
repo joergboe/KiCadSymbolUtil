@@ -310,6 +310,8 @@ class PinHead:
         'Subsequent "real" pins are inserted in place of the deleted pin.\n'
         'The categories "before" and "after" put the insertion marker in place of\n'
         'the pin number. Subsequent "real" pins are inserted at this insertion mark.\n'
+        'Inserted pins are not deleted in a subsequent "delete" and they are ignored\n'
+        'in "before" and "after" searches.'
         'A pseudo-pin with category "overwrite" removes the insertion mark and\n'
         'subsequent pins overwrite parent pins. A pseudo-pin with category "overwrite"\n'
         'must not have a pin number.',
@@ -468,10 +470,17 @@ Attrib : TypeAlias = Union[str,int,float,bool]
 class Pin:
     """Internal representation of a pin."""
     loc: Location
+    protected: bool = field(default=False, init=False)
     attribs: dict[str,Attrib] = field(default_factory=dict)
 
     def __post_init__(self):
         vpr("Pin created:", self.__dict__, level=Verbosity.VERY_VERB)
+
+    def is_protected(self) -> bool:
+        return self.protected
+
+    def set_protected(self, val:bool) -> None:
+        self.protected = val
 
     def add_attr(self, name:str, value:Attrib) -> None:
         self.attribs[name] = value
@@ -1325,7 +1334,7 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
     ins_index = None
     current_ovl_pin:Pin = None
     ovl_index = None
-    new_pins = base_pins.copy()
+    new_pins:list[Pin] = base_pins.copy()
 
     def clear_index():
         nonlocal ins_index, current_ovl_pin, ovl_index
@@ -1340,8 +1349,9 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
         for pn in new_pins:
             if not alt_functs:
                 if derived_pin.get_checked_bus_pin_list() == pn.get_checked_bus_pin_list():
-                    my_list.append(idx)
-                    alt_functs = True
+                    if not pn.is_protected():
+                        my_list.append(idx)
+                        alt_functs = True
             else:
                 if derived_pin.is_alt_func_pin(pn):
                     my_list.append(idx)
@@ -1376,8 +1386,9 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
                 for pn in new_pins:
                     if not alt_functs:
                         if pin.get_checked_bus_pin_list() == pn.get_checked_bus_pin_list():
-                            p_list.append(idx)
-                            alt_functs = True
+                            if not pn.is_protected():
+                                p_list.append(idx)
+                                alt_functs = True
                     else:
                         if pin.is_alt_func_pin(pn):
                             p_list.append(idx)
@@ -1398,6 +1409,7 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
             if not ins_index is None:
                 vpr(f'overload_pins(): Insert pin {p_num!r} at index {ins_index}',
                     level=Verbosity.VERY_VERB)
+                pin.set_protected(True)
                 new_pins.insert(ins_index, pin)
                 ins_index += 1
             else:
@@ -1428,7 +1440,9 @@ def overload_pins(symbol:Symbol, base_pins:list[Pin], derived_sym_pins:list[Pin]
                         level=Verbosity.VERY_VERB)
                     new_pins.insert(ovl_index, pin)
                     ovl_index += 1
-    symbol.pins = new_pins    
+    for np in new_pins:
+        np.set_protected(False)
+    symbol.pins = new_pins
 
 
 def parse_header(head_prop:list[ColumnProp], reader:MyCSVReader,
