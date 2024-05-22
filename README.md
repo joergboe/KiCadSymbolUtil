@@ -25,13 +25,15 @@ The required module is in path *kicad-library-utils/common*
 ## Usage
 
     csv_to_kicad.py --help
-or 
+or
+
     python3 csv_to_kicad.py -h
 
 prints the usual help.
 
     csv_to_kicad.py --info
-or 
+or
+
     python3 csv_to_kicad.py -i
 
 prints more information including a complete description of the csv file format.
