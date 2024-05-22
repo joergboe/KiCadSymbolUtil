@@ -31,6 +31,16 @@ class Const:
     PIN_COUNT_BIG_SYM = 5       # min pin count for big symbols
     PIN_COUNT_VERY_BIG_SYM = 15
 
+    DOC = \
+'''This utility generates KiCad symbol libraries from symbol descriptions in CSV
+files. The CSV files contain information about all the symbol attributes you need
+and all the pin properties. The script checks the validity of the input values,
+determines the required symbol size, and outputs the KiCad library. The script
+supports the creation of symbols with one functional unit.'''
+
+    @classmethod
+    def more_doc(cls) -> str:
+        return '\n' + cls.DOC
 
 class Need(Enum):
     """Degree of necessity of a column
@@ -52,14 +62,7 @@ ColumnProp = namedtuple('ColumnProp', 'name need')
 
 
 class SymHead:
-    """Class contains information of the symbol columns.
-    
-    The first line in the symbol csv file is the headline for the symbol description.
-    The first column of the first line must be not empty. The first column must 
-    be a mandatory symbol attribute like 'symbol name'.
-    The class attributes contain the information necessary for the analysis of
-    symbol values.
-    """
+    """Class contains information of the symbol columns."""
     # The possible column header entries
     NAME = 'symbol name'
     REFERENCE = 'reference'
@@ -163,12 +166,11 @@ class SymHead:
 
     @classmethod
     def more_doc(cls) -> str:
-        res = "\nThe first line in the symbol csv file is the headline for the\n"\
-            "symbol description. The first column of the first line must be\n"\
-            "not empty. It must be a mandatory symbol attribute like\n"\
-            "'symbol name'.\n"\
-            "Header entries are case insensitive.\n"\
-            "Each column head is associated with an 'Need'. The needs are:\n\n"
+        res = \
+'''\nThe first line in the symbol csv file is the headline for the symbol description.
+The first column of the first line must be not empty. It must be a mandatory symbol
+attribute like "symbol name". Header entries are case insensitive. Each column head
+is associated with an "Need". The needs are:\n\n'''
         res += Need.__doc__
         res += '\n\nThe following columns are defined for the symbol description:\n\n'
         for item in cls.COLUMNS_NEED:
@@ -194,16 +196,7 @@ class SymHead:
 
 
 class PinHead:
-    """Class describing the pin columns.
-    
-    The second line in the symbol csv file is the headline for the pin description.
-    The first colum of this line must be empty.
-    The class attributes contain the information necessary for the analysis of
-    all pin values. The instance of this class contains the results of the second
-    line header analysis of the current csv-file:
-        head_list -- a copy of the head line as list[str]
-        head_cols -- the assignement title -> column number as dict[int]
-    """
+    """Class describing the pin columns."""
 
     GAP = '---'        # special number for single gap in the pin row
     GAP_REX_ANY = r'---+.*' 
@@ -324,8 +317,9 @@ class PinHead:
 
     @classmethod
     def more_doc(cls) -> str:
-        res = "\nThe second line in the symbol csv file is the headline for the\n"\
-            "pin description. The first column of this line must be empty.\n\n"
+        res = \
+'''\nThe second line in the symbol csv file is the headline for the pin description.
+The first column of this line must be empty.\n\n'''
         for item in cls.COLUMNS_NEED:
             if item.name in cls.BOOL_FIELDS:
                 the_type = 'boolean'
@@ -351,31 +345,26 @@ class PinHead:
                 res += cls.INFO[item.name]
                 res += '\n'
             res += "\n"
-        res += f'''Pin numbers must be unique in one symbol.
-            If the pin number has a value {cls.GAP!r}
-            or "{cls.GAP} n" no pin is generated at n positions. You can
-            use gaps to group pins into sections.
-            Sticky fields are copied from the previous line within a symbol.
-            
-            Alternative pin functions are identified by the same pin number
-            and must follow one another.
+        res += \
+f"""Pin numbers must be unique in one symbol. If the pin number has a value {cls.GAP!r}
+or '{cls.GAP} n' no pin is generated at n positions. You can use gaps to group pins
+into sections.
+Sticky fields are copied from the previous line within a symbol.
 
-            If the 'pin number' column contains a comma-separated list,
-            a function group (bus) is defined. In this case, the symbol '$' in
-            the pin name is replaced by a serial number starting with 0 and 
-            incrementing by 1.
-            The symbol '$(4)' is replaced by a serial number starting with 4 and 
-            incrementing by 1.
-            The symbol '$(4+2)' is replaced by a serial number starting with 4 and 
-            incrementing by 2.
-            The symbol '$(16-1)' is replaced by a serial number starting with 16 and 
-            decrementing by 1.
+Alternative pin functions are identified by the same pin number and must follow one another.
 
-            A function group (bus) can also define alternative functions. In this
-            case the alternative function must follow immediately and 'pin number'
-            list must be a subset of the main 'pin number' list. The generation
-            of the serial number works independently for each alternative function.
-            '''
+If the 'pin number' column contains a comma-separated list, a function group (bus)
+is defined. In this case, the symbol '$' in the pin name is replaced by a serial
+number starting with 0 and incrementing by 1.
+The symbol '$(4)' is replaced by a serial number starting with 4 and incrementing by 1.
+The symbol '$(4+2)' is replaced by a serial number starting with 4 and incrementing by 2.
+The symbol '$(16-1)' is replaced by a serial number starting with 16 and decrementing by 1.
+
+A function group (bus) can also define alternative functions. In this case the
+alternative function must follow immediately and the 'pin number' list must be a
+subset of the main 'pin number' list. The generation of the serial number works
+independently for each alternative function.
+"""
         return res
 
 
@@ -1745,7 +1734,7 @@ def parse_arguments():
         csv_dialect_required = False
 
     parser = argparse.ArgumentParser(
-        description = 'Generate a kicat symbol library from lib.csv files.',
+        description = 'Generate a kicat symbol library from csv-files.',
         epilog = EPILOG)
     parser.add_argument(
         '--output', '-o',
@@ -1801,6 +1790,7 @@ class MoreInfoAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         """Print available more info and exit(0)."""
         setattr(namespace, self.dest, True)
+        print(Const.more_doc())
         print(SymHead.more_doc())
         print(PinHead.more_doc())
         exit(0)
