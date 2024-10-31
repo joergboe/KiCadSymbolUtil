@@ -914,8 +914,7 @@ class Symbol:
             Const.HIDDEN_TEXT_GAP
         py = py * -1
         for p in SymHead.MAN_PROPS:
-            prop = kicad.Property(SymHead.KICAD_PROPERTY_NAMES[p], self.attribs[p],
-                                  None)
+            prop = kicad.Property(SymHead.KICAD_PROPERTY_NAMES[p], self.attribs[p])
             prop.effects.is_hidden = True
             if p in SymHead.HIDDEN_PROPS_TO_SHIFT:
                 prop.posy = py * Const.GRID
@@ -923,8 +922,7 @@ class Symbol:
             new_symbol.properties.append(prop)
         for p in SymHead.OPT_PROPS:
             if p in self.attribs and self.attribs[p]:
-                prop = kicad.Property(SymHead.KICAD_PROPERTY_NAMES[p], self.attribs[p],
-                                      None)
+                prop = kicad.Property(SymHead.KICAD_PROPERTY_NAMES[p], self.attribs[p])
                 prop.effects.is_hidden = True
                 new_symbol.properties.append(prop)
         # place reference and value on top and below bottom
