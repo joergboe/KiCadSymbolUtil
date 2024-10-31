@@ -15,12 +15,13 @@ with one functional unit.
 This script requires python 3.
 
 This utility requires the module kicad_sym
-from the KiCad Library utilities with some corrections.
+from the KiCad Library utilities.
 Thus clone:
-[kicad-library-utils](https://gitlab.com/joergboe/kicad-library-utils.git)
-Clone this repository and adapt the PYTHONPATH environment accordingly or adapt
-an use the script *set_python_path.sh*
-The required module is in path *kicad-library-utils/common*
+[kicad-library-utils](https://gitlab.com/kicad/libraries/kicad-library-utils.git)
+Clone this repository and adapt the PYTHONPATH environment accordingly.
+You can use the script *set_python_path.sh* to set the python path. This script 
+assumes that this repository and the kicad-library-utils are both installed in a
+common directory. The required module is in path *kicad-library-utils/common*
 
 ## Usage
 
