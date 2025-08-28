@@ -2,7 +2,7 @@
 """Generate a kicat symbol library from lib.csv files."""
 
 __author__ = "joergboe"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 
 from io import TextIOWrapper
 import sys
