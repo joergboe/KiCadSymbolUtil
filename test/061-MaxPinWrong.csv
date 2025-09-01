@@ -1,4 +1,4 @@
-Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,extends,text,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap
+Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,kicad extends,text,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap
 ,PIN Category,PIN number,PIN name,pin EL Type,PIN gr type,pin length,pin stacked,pin hidden,name font size,number font size,,,,,,,,,,
 SYM1,,,,,,,,A,,,,,,,,,,,,
 ,leftx,1,,input,,,,,,,,,,,,,,,,
@@ -9,13 +9,13 @@ SYM3,,,,,,,,,,,,,,,,,,,,
 SYM3,,,,,,,,,,,,,,,,,,,,
 ,left,1,,input,input_low,aa,,,,,,,,,,,,,,
 SYM4,,,,,,,,,,,,,,,,,,,,
-,left,1,,input,input_low,2.0,ss,,,,,,,,,,,,,
+,left,1,,input,input_low,2,ss,,,,,,,,,,,,,
 SYM5,,,,,,,,,,,,,,,,,,,,
-,left,1,,input,line,2.0,no,::,,,,,,,,,,,,
+,left,1,,input,line,2,no,::,,,,,,,,,,,,
 SYM6,,,,,,,,,,,,,,,,,,,,
-,left,1,,input,line,1.0,no,no,a,,,,,,,,,,,
+,left,1,,input,line,1,no,no,a,,,,,,,,,,,
 SYM7,,,,,,,,,,,,,,,,,,,,
-,left,1,,input,line,1.0,no,no,30,x,,,,,,,,,,
+,left,1,,input,line,1,no,no,30,x,,,,,,,,,,
 SYMZ,,,,,,,,Z,,,,,,0,0,0.25,0.25,20,0.5,0.5
 ,left,1,nam,input,,0.75,false,false,20,20,,,,,,,,,,
 # 8 Failures,1 Symbol,generated,,,,,,,,,,,,,,,,,,

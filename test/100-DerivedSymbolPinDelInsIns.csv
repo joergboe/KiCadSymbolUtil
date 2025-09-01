@@ -1,13 +1,13 @@
-Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,extends,text,Derive From,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap,text gap
+Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,Kicad extends,text,Derive From,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap,text gap
 ,PIN category,PIN number,PIN name,pin EL Type,PIN gr type,pin length,pin stacked,pin hidden,,name font size,number font size,,,,,,,,,,,
 SYM1,,,,,,,,A,,,,,,,,,,,,,,
-,left,1,A,input,,2.0,,,,,,,,,,,,,,,,
+,left,1,A,input,,2,,,,,,,,,,,,,,,,
 ,right,13,O1,output,,,,,,,,,,,,,,,,,,
 ,right,14,~{O1},output,inverted,,,,,,,,,,,,,,,,,
 SYM2,,,,,,,,SYM2,SYM1,,,,,,,,,,,,,
 ,delete,14,,,,,,,,,,,,,,,,,,,,
 ,before,1,,,,,,,,,,,,,,,,,,,,
-,left,1A,AA,output,,2.0,,,,,,,,,,,,,,,,
+,left,1A,AA,output,,2,,,,,,,,,,,,,,,,
 ,after,13,,,,,,,,,,,,,,,,,,,,
 ,right,14A,OO,,,,,,,,,,,,,,,,,,,
 # 2 Symbols,generated,,,,,,,,,,,,,,,,,,,,,

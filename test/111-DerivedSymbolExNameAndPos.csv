@@ -1,7 +1,7 @@
-Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,extends,text,Derive From,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap,text gap
+Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,Kicad extends,text,Derive From,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap,text gap
 ,PIN category,PIN number,PIN name,pin EL Type,PIN gr type,pin length,pin stacked,pin hidden,,name font size,number font size,,,,,,,,,,,
 SYM1,,,,,,,,AA,,,,,,,,,,,,,,
-,left,1,A,input,,2.0,,,,,,,,,,,,,,,,
+,left,1,A,input,,2,,,,,,,,,,,,,,,,
 ,right,2,O1,output,,,,,,,,,,,,,,,,,,
 ,,2,O1A,output,,,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
@@ -11,7 +11,7 @@ SYM1,,,,,,,,AA,,,,,,,,,,,,,,
 ,,4,XXX,,,,,,,,,,,,,,,,,,,
 SYM2,,,,,,,,SYM2,SYM1,,,,,,,,,,,,,
 ,delete,2,,,,,,,,,,,,,,,,,,,,
-,right,3,OVL1,output,inverted,2.0,,,,,,,,,,,,,,,,
+,right,3,OVL1,output,inverted,2,,,,,,,,,,,,,,,,
 ,,3,OVL1A,,,,,,,,,,,,,,,,,,,
 ,delete,3,,,,,,,,,,,,,,,,,,,,
 ,right,2,OVL2,input,inverted,,,,,,,,,,,,,,,,,

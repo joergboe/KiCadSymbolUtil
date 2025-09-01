@@ -1,8 +1,8 @@
-Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,FP Filters,Text,Extends,Derive From,MIN Width,MIN Height,W Padding,H Padding,In BOM,On Board,hide pin numbers,pin name offset,hide pin names,text font size,h r/v gap,w r/v gap,text gap
+Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,FP Filters,Text,Kicad Extends,Derive From,MIN Width,MIN Height,W Padding,H Padding,In BOM,On Board,hide pin numbers,pin name offset,hide pin names,text font size,h r/v gap,w r/v gap,text gap
 ,PIN Category,PIN Number,PIN Name,PIN EL Type,PIN Gr Type,PIN Length,PIN Stacked,PIN Hidden,name font size,number font size,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
 Z8001,U,,"16-bit General Purpose Microprocessor segmented, DIP-48",https://archive.org/details/zilog-z-8000-data-manual/page/20/mode/2up,Z8000 CPU uP segmented Z-bus,DIP*W15.24mm*,"Z8000
-CPU",,,4,,1.5,,,,,30,,,,,9.0
+CPU",,,4,,1.5,,,,,30,,,,,9
 ,left,34,~{AS},tri_state,line,1.5,,,,,,,,,,,,,,,,
 ,,19,~{DS},tri_state,,,,,,,,,,,,,,,,,,
 ,,18,~{MREQ},tri_state,,,,,,,,,,,,,,,,,,
@@ -31,12 +31,12 @@ CPU",,,4,,1.5,,,,,30,,,,,9.0
 ,,"47,46,42,24,37,25,26",SN$(6-1),tri_state,line,,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,,14,~{SEGT},input,line,,,,,,,,,,,,,,,,,
-,top,11,VCC,power_in,line,1.0,,,,,,,,,,,,,,,,
-,bottom,36,GND,power_in,line,1.0,,,,,,,,,,,,,,,,
+,top,11,VCC,power_in,line,1,,,,,,,,,,,,,,,,
+,bottom,36,GND,power_in,line,1,,,,,,,,,,,,,,,,
 ,,33,,no_connect,,,,yes,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
 Z8002,U,,"16-bit General Purpose Microprocessor, DIP-40",https://archive.org/details/zilog-z-8000-data-manual/page/20/mode/2up,Z8000 CPU uP Z-bus,DIP*W15.24mm*,"Z8000
-CPU",,,4,,1.5,,,,,30,,,,,9.0
+CPU",,,4,,1.5,,,,,30,,,,,9
 ,left,29,~{AS},tri_state,line,1.5,,,,,,,,,,,,,,,,
 ,,17,~{DS},tri_state,,,,,,,,,,,,,,,,,,
 ,,16,~{MREQ},tri_state,,,,,,,,,,,,,,,,,,
@@ -61,12 +61,12 @@ CPU",,,4,,1.5,,,,,30,,,,,9.0
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,,7,~{MI},input,line,,,,,,,,,,,,,,,,,
 ,,15,~{MO},output,,,,,,,,,,,,,,,,,,
-,top,10,VCC,power_in,line,1.0,,,,,,,,,,,,,,,,
-,bottom,31,GND,power_in,line,1.0,,,,,,,,,,,,,,,,
+,top,10,VCC,power_in,line,1,,,,,,,,,,,,,,,,
+,bottom,31,GND,power_in,line,1,,,,,,,,,,,,,,,,
 ,,28,,no_connect,,,,yes,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
 Z8010,U,,"16-bit Memory Management Unit, DIP-48",https://archive.org/details/bitsavers_zilogz80000mmu_742400,Z8000 MMU segmented Z-bus,DIP*W15.24mm*,"Z8000
-MMU",,,4,,1.5,,,,,,,,,,9.0
+MMU",,,4,,1.5,,,,,,,,,,9
 ,left,"31,32,33,34,37,38,39,40",AD$(15-1),bidirectional,line,1.5,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,,46,~{AS},input,line,,,,,,,,,,,,,,,,,
@@ -87,12 +87,12 @@ MMU",,,4,,1.5,,,,,,,,,,9.0
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,,3,~{SEGT},open_collector,line,,,,,,,,,,,,,,,,,
 ,,4,~{SUP},open_collector,,,,,,,,,,,,,,,,,,
-,top,11,VCC,power_in,line,1.0,,,,,,,,,,,,,,,,
-,bottom,35,GND,power_in,line,1.0,,,,,,,,,,,,,,,,
+,top,11,VCC,power_in,line,1,,,,,,,,,,,,,,,,
+,bottom,35,GND,power_in,line,1,,,,,,,,,,,,,,,,
 ,,23,,no_connect,,,,yes,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
 Z8016,U,,"Z8000 DMA Transfer Controller DTC, DIP-48",https://archive.org/details/bitsavers_zilogz80006dtc_1108678/mode/2up,Z8000 DTC DMA segmented Z-bus,DIP*W15.24mm*,"Z8000
-DTC",,,4,,1.5,,,,,,,,,,9.0
+DTC",,,4,,1.5,,,,,,,,,,8
 ,left,44,~{AS},bidirectional,line,1.5,,,,,,,,,,,,,,,,
 ,,43,~{DS},bidirectional,,,,,,,,,,,,,,,,,,
 ,,41,R/~{W},bidirectional,,,,,,,,,,,,,,,,,,
@@ -120,10 +120,10 @@ DTC",,,4,,1.5,,,,,,,,,,9.0
 ,,--- 2,,,,,,,,,,,,,,,,,,,,
 ,,27,SN7/MMUSync,tri_state,line,,,,,,,,,,,,,,,,,
 ,,"21,22,23,24,25,28,29",SN$(6-1),tri_state,line,,,,,,,,,,,,,,,,,
-,top,4,VCC,power_in,line,1.0,,,,,,,,,,,,,,,,
-,bottom,26,GND,power_in,line,1.0,,,,,,,,,,,,,,,,
+,top,4,VCC,power_in,line,1,,,,,,,,,,,,,,,,
+,bottom,26,GND,power_in,line,1,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
-Z8030,U,,"SCC Serial Communication Controller, DIP-40",https://pdf1.alldatasheet.com/datasheet-pdf/download/134545/ZILOG/Z08030.html,SCC serial communication Z-bus,DIP*W15.24mm*,SCC,,,4,,1.5,,,,,30,,,,,
+Z8030,U,,"SCC Serial Communication Controller, DIP-40",https://pdf1.alldatasheet.com/datasheet-pdf/download/134545/ZILOG/Z08030.html,SCC serial communication Z-bus,DIP*W15.24mm*,SCC,,,4,,1.5,,,,,30,,,,,4.5
 ,left,"40,1,39,2,38,3,37,4",AD$,bidirectional,line,1.5,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,left,35,~{AS},input,line,,,,,,,,,,,,,,,,,
@@ -169,7 +169,7 @@ Z8030,U,,"SCC Serial Communication Controller, DIP-40",https://pdf1.alldatasheet
 ,,23,~{RTSB},output,line,,,,,,,,,,,,,,,,,
 ,,22,~{CTSB},input,line,,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
-,top,9,VCC,power_in,line,1.0,,,,,,,,,,,,,,,,
+,top,9,VCC,power_in,line,1,,,,,,,,,,,,,,,,
 ,bottom,31,GND,power_in,line,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
 Z8530,,,,,SCC serial communication,,,,Z8030,,,,,,,,,,,,,
@@ -227,8 +227,8 @@ Z8036,U,,"CIO Counter/Timer and Parallel I/O Unit, DIP-40",https://pdf1.alldatas
 ,,21,~{DACIN},input,,,,,,,,,,,,,,,,,,
 ,,19,IN/~{OUT},bidirectional,,,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
-,top,23,VCC,power_in,line,1.0,,,,,,,,,,,,,,,,
-,bottom,7,GND,power_in,line,1.0,,,,,,,,,,,,,,,,
+,top,23,VCC,power_in,line,1,,,,,,,,,,,,,,,,
+,bottom,7,GND,power_in,line,1,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
 Z8536,,,,,CIO counter timer parallel,,,,Z8036,,,,,,,,,,,,,
 ,left,"37,38,39,40,1,2,3,4",D$,bidirectional,line,1.5,,,,,,,,,,,,,,,,
@@ -323,7 +323,7 @@ Z8038,U,,FIFO Input/Outout Interface Unit,http://t.datasheets.pl/elementy_czynne
 ,,30,A3,input,,,,,,,,,,,,,,,,,,
 ,,30,OUT3,output,,,,,,,,,,,,,,,,,,
 ,,--- 3,,,,,,,,,,,,,,,,,,,,
-,top,40,VCC,power_in,line,1.0,,,,,,,,,,,,,,,,
+,top,40,VCC,power_in,line,1,,,,,,,,,,,,,,,,
 ,bottom,20,GND,power_in,line,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
 Z8060,U,,Z8060/Z8560 FIFO Buffer Unit,,FIFO,DIP*W15.24mm*,FIFO,,,4,,1.5,,,,,,,,,,
@@ -344,5 +344,5 @@ Z8060,U,,Z8060/Z8560 FIFO Buffer Unit,,FIFO,DIP*W15.24mm*,FIFO,,,4,,1.5,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,,3,FULL,open_collector,,,,,,,,,,,,,,,,,,
 ,,4,EMPTY,open_collector,,,,,,,,,,,,,,,,,,
-,top,28,VCC,power_in,line,1.0,,,,,,,,,,,,,,,,
+,top,28,VCC,power_in,line,1,,,,,,,,,,,,,,,,
 ,bottom,14,GND,power_in,line,,,,,,,,,,,,,,,,,

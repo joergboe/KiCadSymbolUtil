@@ -1,7 +1,7 @@
-Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,extends,text,Derive From,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap,text gap
+Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,fp filters,Kicad extends,text,Derive From,in bom,on board,hide pin numbers,pin name offset,hide pin names,min width,min height,w padding,h padding,text font size,h r/v gap,w r/v gap,text gap
 ,PIN category,PIN number,PIN name,pin EL Type,PIN gr type,pin length,pin stacked,pin hidden,,name font size,number font size,,,,,,,,,,,
 SYM1,,,,,,,,A,,,,,,,,,,,,,,
-,left,1,A,input,,2.0,,,,,,,,,,,,,,,,
+,left,1,A,input,,2,,,,,,,,,,,,,,,,
 ,,"2,3,4,5",I$,,,,,,,,,,,,,,,,,,,
 ,,"2,3, 4,5",II$(3-1),,,,,,,,,,,,,,,,,,,
 ,right,13,O1,output,,,,,,,,,,,,,,,,,,

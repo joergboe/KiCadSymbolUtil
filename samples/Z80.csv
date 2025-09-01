@@ -1,7 +1,8 @@
-Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,FP Filters,Text,Extends,Derive From,MIN Width,MIN Height,W Padding,H Padding,In BOM,On Board,hide pin numbers,pin name offset,hide pin names,text font size,h r/v gap,w r/v gap,text gap
+Symbol Name,Reference,Footprint,Description,Datasheet,Keywords,FP Filters,Text,Kicad Extends,Derive From,MIN Width,MIN Height,W Padding,H Padding,In BOM,On Board,hide pin numbers,pin name offset,hide pin names,text font size,h r/v gap,w r/v gap,text gap
 ,PIN Category,PIN Number,PIN Name,PIN EL Type,PIN Gr Type,PIN Length,PIN Stacked,PIN Hidden,name font size,number font size,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
-Z8400,U,,"8-bit General Purpose Microprocessor, DIP-40",www.zilog.com/manage_directlink.php?filepath=docs/z80/um0080,Z80 CPU uP,DIP*W15.24mm*,Z80 CPU,,,4,,1.5,1.5,,,,30,,,,,
+Z8400,U,,"8-bit General Purpose Microprocessor, DIP-40",www.zilog.com/manage_directlink.php?filepath=docs/z80/um0080,Z80 CPU uP,DIP*W15.24mm*,"Z80
+CPU",,,4,,1.5,1.5,,,,30,,,,,
 ,left,"14,15,12,8,7,9,10,13",D$,bidirectional,line,1.5,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,,24,~{WAIT},input,line,,,,,,,,,,,,,,,,,
@@ -26,7 +27,8 @@ Z8400,U,,"8-bit General Purpose Microprocessor, DIP-40",www.zilog.com/manage_dir
 ,top,11,VCC,power_in,line,,,,,,,,,,,,,,,,,
 ,bottom,29,GND,power_in,line,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
-Z8410,U,," DMA Direct Memory Access Controller, DIP-40",https://www.zilog.com/docs/z80/ps0179.pdf,Z80 DMA DMAC,DIP*W15.24mm*,Z80 DMA,,,4,,1.5,1.5,,,,,,,,,
+Z8410,U,," DMA Direct Memory Access Controller, DIP-40",https://www.zilog.com/docs/z80/ps0179.pdf,Z80 DMA DMAC,DIP*W15.24mm*,"Z80
+DMA",,,4,,1.5,1.5,,,,,,,,,
 ,left,"35,34,33,32,31,29,28,27",D$,bidirectional,line,1.5,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,,26,~{M1},input,line,,,,,,,,,,,,,,,,,
@@ -52,7 +54,8 @@ Z8410,U,," DMA Direct Memory Access Controller, DIP-40",https://www.zilog.com/do
 ,top,11,VCC,power_in,line,,,,,,,,,,,,,,,,,
 ,bottom,30,GND,power_in,line,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
-Z8420,U,,"Parallel I/O, DIP-40",https://www.zilog.com/docs/z80/ps0180.pdf,Z80 PIO parallel interface,DIP*W15.24mm*,Z80 PIO,,,4,,1.5,1.5,,,,,,,,,
+Z8420,U,,"Parallel I/O, DIP-40",https://www.zilog.com/docs/z80/ps0180.pdf,Z80 PIO parallel interface,DIP*W15.24mm*,"Z80
+PIO",,,4,,1.5,1.5,,,,,,,,,
 ,left,"19,20,1,40,39,38,3,2",D$,bidirectional,line,1.5,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,,37,~{M1},,,,,,,,,,,,,,,,,,,
@@ -80,7 +83,8 @@ Z8420,U,,"Parallel I/O, DIP-40",https://www.zilog.com/docs/z80/ps0180.pdf,Z80 PI
 ,top,26,VCC,power_in,line,,,,,,,,,,,,,,,,,
 ,bottom,11,GND,power_in,line,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
-Z8430,U,,"Counter/Timer Circuit, DIP-40",https://www.zilog.com/docs/z80/ps0181.pdf,Z80 CTC Counter Timer,DIP*W15.24mm*,Z80 CTC,,,4,,1.5,1.5,,,,,,,,,
+Z8430,U,,"Counter/Timer Circuit, DIP-40",https://www.zilog.com/docs/z80/ps0181.pdf,Z80 CTC Counter Timer,DIP*W15.24mm*,"Z80
+CTC",,,4,,1.5,1.5,,,,,,,,,
 ,left,"25,26,27,28,1,2,3,4",D$,bidirectional,line,1.5,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,,14,~{M1},input,line,,,,,,,,,,,,,,,,,
@@ -110,7 +114,8 @@ Z8430,U,,"Counter/Timer Circuit, DIP-40",https://www.zilog.com/docs/z80/ps0181.p
 ,top,24,VCC,power_in,line,,,,,,,,,,,,,,,,,
 ,bottom,5,GND,power_in,line,,,,,,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,
-Z8440-0,U,,"Serial Input/Output Controller, DIP-40",https://www.zilog.com/docs/z80/ps0183.pdf,Z80 SIO serial interface,DIP*W15.24mm*,Z80 SIO,,,4,,1.5,1.5,,,,30,,,,,6.0
+Z8440-0,U,,"Serial Input/Output Controller, DIP-40",https://www.zilog.com/docs/z80/ps0183.pdf,Z80 SIO serial interface,DIP*W15.24mm*,"Z80
+SIO",,,4,,1.5,1.5,,,,30,,,,,4
 ,left,"40,1,39,2,38,3,37,4",D$,bidirectional,line,1.5,,,,,,,,,,,,,,,,
 ,,---,,,,,,,,,,,,,,,,,,,,
 ,left,8,~{M1},input,line,,,,,,,,,,,,,,,,,
