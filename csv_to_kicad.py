@@ -138,7 +138,7 @@ class SymHead:
     # Properties valid for extension symbols (except name & extends)
     EXTENSION_PROPS = {REFERENCE, FOOTPRINT, DATASHEET, DESCRIPTION, KEYWORDS,
                        FP_FILTERS}
-    
+
     INFO = {
         TEXT: 'The text field in the main symbol rectangle',
         MIN_W: 'The minimum width of the pin shape rectangle in pin grid units (must be even)',
@@ -694,7 +694,7 @@ class PinProcessor:
         vpr(f'parse_pin inp: {inp.columns}', level=Verbosity.VERBOSE)
 
         if not isinstance(inp.columns, list):
-            raise LogicError(f'Wrong type in parse_pin()!', inp.location)
+            raise LogicError('Wrong type in parse_pin()!', inp.location)
         # In pin records the first column must be empty
         if inp.columns[0]:
             raise LogicError(f'Wrong record {inp.columns} in parse_pin!', inp.location)
@@ -729,7 +729,7 @@ class PinProcessor:
                 if pin.is_pseudo_pin():
                     break_condition = 'pseudo pin'
                     if (pin.get_cat() == PinHead.OVERLOAD) and pin.get_number():
-                        raise PinError(f'Pin number is not allowed for overload!', inp.location)
+                        raise PinError('Pin number is not allowed for overload!', inp.location)
             if check_fields:
                 # propagate sticky fields if necessary and possible
                 if (not value) and (item.name in PinHead.STICKY_FIELDS):
@@ -800,7 +800,7 @@ def get_bus_build_schema(name:str, loc:Location) -> BusBuildSchema:
             raise LogicError(f'Error in get_bus_build_schema name:{name!r} '
                              f'rex: {rex!r} operation: {operation!r}', loc)
     else:
-        vpr(f'get_bus_build_schema() : no match!', level=Verbosity.VERY_VERB)
+        vpr('get_bus_build_schema() : no match!', level=Verbosity.VERY_VERB)
         rex = ''
     res = BusBuildSchema(rex, start, inc)
     vpr(f'get_bus_build_schema returns: {res}', level=Verbosity.VERBOSE)                
@@ -843,7 +843,7 @@ class Symbol:
 
     def get_name(self) -> str:
         if not SymHead.NAME in self.attribs:
-            raise LogicError(f'get_name() called but no name in self.attribs', self.loc)
+            raise LogicError('get_name() called but no name in self.attribs', self.loc)
         return self.attribs[SymHead.NAME]
 
     def add_pin(self, pin:Pin) -> None:
@@ -892,8 +892,8 @@ class Symbol:
         for pin in self.pins:
             if pin.get_cat() == side:
                 if pin.is_pseudo_pin():
-                    raise LogicError(f'get_effective_pin_count(): No pseudo pins '
-                                     f'allowed here!', pin.loc)
+                    raise LogicError('get_effective_pin_count(): No pseudo pins '
+                                     'allowed here!', pin.loc)
                 if pin.is_stacked():
                     if main_pin and main_pin.is_alt_func_pin(pin):
                         raise PinError(f'get_effective_pin_count(): alternative '
@@ -920,7 +920,7 @@ class Symbol:
     def get_pin_shape(self) -> PinShapeProps:
         """Get the minimal rectangle depending on the pin count. Return 1/2 height 
         and 1/2 width in multiples of the pin grid len. 
-    
+
         l - edge length; p - pin count; g - pin grid
         l >= (p - 1) * g
         """
@@ -1084,7 +1084,7 @@ class Symbol:
                     vpr(f'build_pin(): alt_func_list_single={alt_func_list_single}',
                         level=Verbosity.VERY_VERB)
                     if not alt_func_list_single:
-                        raise LogicError(f'build_pin(): with empty alt_func_list_single!',
+                        raise LogicError('build_pin(): with empty alt_func_list_single!',
                                          self.loc)
                     # check pin number uniqueness
                     p_n = alt_func_list_single[0].get_number()
@@ -1118,7 +1118,7 @@ class Symbol:
                 # build_bus
                 vpr(f'build_bus(): alt_func_list={alt_func_list}', level=Verbosity.VERY_VERB)
                 if not alt_func_list:
-                    raise LogicError(f'build_bus(): with empty alt_func_list!',
+                    raise LogicError('build_bus(): with empty alt_func_list!',
                                      self.loc)
                 pin_num_list = alt_func_list[0].get_checked_bus_pin_list()
                 alt_funcs_name_schemas = []
@@ -1264,7 +1264,7 @@ class SymbolProcessor:
             return inp, None
 
         if not isinstance(inp.columns, list):
-            raise LogicError(f'Wrong type in parse_symbol()!', inp.location)
+            raise LogicError('Wrong type in parse_symbol()!', inp.location)
 
         # check surplus data fields and data values with no header entry
         i = 0
@@ -1722,7 +1722,7 @@ def main():
                         if new_csv_rec is None:
                             new_csv_rec = CSVRecord(None, reader.get_location())
                     if new_csv_rec is None:
-                        raise LogicError(f'main: new_csv_rec is None!', csv_rec.location)
+                        raise LogicError('main: new_csv_rec is None!', csv_rec.location)
                     csv_rec = new_csv_rec
 
                 vpr(f'End file: {inputfile!r} ',
@@ -1735,9 +1735,9 @@ def main():
                 all_failures += failures
                 all_skipped_pins += skipped_pins
 
-        except StopIteration as error:
+        except StopIteration:
             inp_file_errors += 1
-            print(f'StopIteration: Premature file end! ', reader.get_location(),
+            print('StopIteration: Premature file end! ', reader.get_location(),
                   file=sys.stderr)
         except csv.Error as error:
             inp_file_errors += 1
@@ -1816,8 +1816,8 @@ def parse_arguments():
         '--verbose', '-v',
         action='count',
         default = 1,
-        help = f'Verbose output of debug information. Repeat argument for '
-               f' very verbose output.')
+        help = 'Verbose output of debug information. Repeat argument for '
+               'very verbose output.')
     parser.add_argument(
         '--silent', '-s',
         action = 'store_true',
@@ -1902,7 +1902,7 @@ def verbose_print_fact(verbosity:int, silent:bool):
     else:
         try:
             vb = Verbosity(verbosity)
-        except ValueError as err:
+        except ValueError:
             print(f'Verbosity level: {verbosity} is not allowed!\n'
                 f'Valid levels:\n', file=sys.stderr)
             for e in Verbosity:
