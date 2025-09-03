@@ -575,7 +575,7 @@ class Pin:
         self.attribs[name] = value
 
     def get_attr(self, name: str) -> Attrib:
-        if not name in self.attribs:
+        if name not in self.attribs:
             raise LogicError(f"No attribute {name!r}", self.loc)
         return self.attribs[name]
 
@@ -586,12 +586,12 @@ class Pin:
         self.attribs[PinHead.NUMBER] = value
 
     def is_gap(self) -> bool:
-        if not PinHead.NUMBER in self.attribs:
+        if PinHead.NUMBER not in self.attribs:
             raise LogicError("in is_separator_or_gap()", self.loc)
         return PinHead.is_gap(self.attribs[PinHead.NUMBER])
 
     def get_gap_count(self) -> int:
-        if not PinHead.NUMBER in self.attribs:
+        if PinHead.NUMBER not in self.attribs:
             raise LogicError("in is_separator_or_gap()", self.loc)
         value = self.attribs[PinHead.NUMBER]
         res = PinHead.get_gap_count(value)
@@ -612,17 +612,17 @@ class Pin:
             return False
 
     def get_cat(self) -> str:
-        if not PinHead.CAT in self.attribs:
+        if PinHead.CAT not in self.attribs:
             raise LogicError(f"No attribute {PinHead.CAT!r}", self.loc)
         return self.attribs[PinHead.CAT]
 
     def get_number(self) -> str:
-        if not PinHead.NUMBER in self.attribs:
+        if PinHead.NUMBER not in self.attribs:
             raise LogicError(f"No attribute {PinHead.NUMBER!r}", self.loc)
         return self.attribs[PinHead.NUMBER]
 
     def get_name(self) -> str:
-        if not PinHead.NAME in self.attribs:
+        if PinHead.NAME not in self.attribs:
             raise LogicError(f"No attribute {PinHead.NAME!r}", self.loc)
         return self.attribs[PinHead.NAME]
 
@@ -960,7 +960,7 @@ class Symbol:
             return None
 
     def get_name(self) -> str:
-        if not SymHead.NAME in self.attribs:
+        if SymHead.NAME not in self.attribs:
             raise LogicError("get_name() called but no name in self.attribs", self.loc)
         return self.attribs[SymHead.NAME]
 
@@ -1491,7 +1491,7 @@ class SymbolProcessor:
                         f"Cannot extend and derive from another symbol {symbol.get_name()!r}",
                         inp.location,
                     )
-                if not value in all_symbols:
+                if value not in all_symbols:
                     raise SymbolError(
                         f"Symbol to extend {value!r} not found!", inp.location
                     )
@@ -1500,7 +1500,7 @@ class SymbolProcessor:
 
             if (item.name == SymHead.DERIVE_FROM) and value:
                 # Derived column is processed before column extends -> no check
-                if not value in all_symbols:
+                if value not in all_symbols:
                     raise SymbolError(
                         f"Derived from symbol {value!r} not found!", inp.location
                     )
@@ -1511,7 +1511,7 @@ class SymbolProcessor:
             # try to get attribute from parent for derived symbols
             if derived_from and not value:
                 derived_attr = derived_from.get_attr(item.name)
-                if not derived_attr is None:
+                if derived_attr is not None:
                     # derived attributes are taken unchecked
                     symbol.add_attr(item.name, derived_attr)
                     continue
@@ -1525,7 +1525,7 @@ class SymbolProcessor:
 
             # check extension props
             if symbol.is_extension():
-                if value and not item.name in SymHead.EXTENSION_PROPS:
+                if value and item.name not in SymHead.EXTENSION_PROPS:
                     raise SymbolError(
                         f"{item.name!r} is not allowed for extension "
                         f"symbols in symbol: {symbol.get_name()!r}",
@@ -1687,7 +1687,7 @@ def overload_pins(
             else:
                 raise LogicError(f"Invalide overwrite operation: {category!r}", pin.loc)
         else:
-            if not ins_index is None:
+            if ins_index is not None:
                 vpr(
                     f"overload_pins(): Insert pin {p_num!r} at index {ins_index}",
                     level=Verbosity.VERY_VERB,
@@ -1697,7 +1697,7 @@ def overload_pins(
                 ins_index += 1
             else:
                 done = False
-                if not ovl_index is None:
+                if ovl_index is not None:
                     if current_ovl_pin.is_alt_func_pin(pin):
                         vpr(
                             f"overload_pins(): Overload: insert pin {p_num!r} at index {ovl_index}",
@@ -1969,10 +1969,10 @@ def main():
                 skipped_pins = 0
                 failures = 0
                 symbol_count = 0
-                while (csv_rec.columns == None) or (csv_rec.columns != Const.EOT):
+                while (csv_rec.columns is None) or (csv_rec.columns != Const.EOT):
                     new_csv_rec = None
                     try:
-                        if csv_rec.columns == None:
+                        if csv_rec.columns is None:
                             csv_rec = reader.get_nonempty_line()
                         # skip pin lines
                         while (csv_rec.columns != Const.EOT) and (
