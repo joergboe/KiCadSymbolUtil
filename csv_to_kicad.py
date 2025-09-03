@@ -1648,7 +1648,6 @@ class KicadLibWrapper:
 
     def __post_init__(self):
         self.lib = kicad.KicadLibrary(self.get_filename())
-        self.lib.version = "20231120"
 
     def get_filename(self) -> str:
         return self.libname + '.kicad_sym'
